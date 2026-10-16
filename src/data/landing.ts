@@ -1,0 +1,183 @@
+import type { ComponentType, SVGProps } from "react";
+import {
+  IconCalendar,
+  IconCap,
+  IconHeart,
+  IconMusic,
+  IconUsers,
+} from "../components/Icons";
+
+/** Every icon in the shared set shares this signature. */
+export type IconType = ComponentType<SVGProps<SVGSVGElement>>;
+
+/* ------------------------------------------------------------------ */
+/* Navigation                                                          */
+/* ------------------------------------------------------------------ */
+export type NavItem = { label: string; to: string; end?: boolean };
+
+export const navItems: NavItem[] = [
+  { label: "Home", to: "/", end: true },
+  { label: "About", to: "/about" },
+  { label: "Donate", to: "/donate" },
+];
+
+/* ------------------------------------------------------------------ */
+/* Hero metrics                                                        */
+/* ------------------------------------------------------------------ */
+export type Metric = {
+  id: string;
+  value: string;
+  label: string;
+  icon: IconType;
+};
+
+export const metrics: Metric[] = [
+  { id: "founded", value: "2012", label: "Year we started", icon: IconCalendar },
+  { id: "members", value: "45", label: "Volunteer musicians", icon: IconUsers },
+  { id: "concerts", value: "30+", label: "Free concerts every year", icon: IconMusic },
+  { id: "students", value: "250", label: "Students taught", icon: IconCap },
+];
+
+/* ------------------------------------------------------------------ */
+/* Rehearsals & events                                                 */
+/* ------------------------------------------------------------------ */
+export type BandEvent = {
+  id: string;
+  month: string;
+  day: string;
+  name: string;
+  place: string;
+  time: string;
+  going: number;
+  instruments: string[];
+};
+
+export const events: BandEvent[] = [
+  {
+    id: "autumn-plaza",
+    month: "Nov",
+    day: "08",
+    name: "Autumn Plaza Concert",
+    place: "Town Plaza",
+    time: "4:00 PM",
+    going: 38,
+    instruments: ["Trumpet", "Clarinet"],
+  },
+  {
+    id: "carols-brass",
+    month: "Dec",
+    day: "13",
+    name: "Carols and Brass",
+    place: "Parish Hall",
+    time: "6:00 PM",
+    going: 52,
+    instruments: ["Horn", "Trombone"],
+  },
+  {
+    id: "open-rehearsal",
+    month: "Jan",
+    day: "16",
+    name: "Open Rehearsal & Sign-ups",
+    place: "Community Center",
+    time: "9:00 AM",
+    going: 21,
+    instruments: ["Flute", "Percussion"],
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/* Testimonials                                                        */
+/* ------------------------------------------------------------------ */
+export type Testimonial = {
+  id: string;
+  quote: string;
+  name: string;
+  role: string;
+  initials: string;
+};
+
+export const testimonials: Testimonial[] = [
+  {
+    id: "marites",
+    quote:
+      "My daughter had never touched an instrument. Two years later she is playing clarinet in the plaza concert — and it has never cost us a peso.",
+    name: "Marites R.",
+    role: "Parent of a youth student",
+    initials: "MR",
+  },
+  {
+    id: "eduardo",
+    quote:
+      "I played trumpet in school and thought that part of my life was over. The Saturday ensemble gave it back to me at 61.",
+    name: "Eduardo S.",
+    role: "Senior Ensemble member",
+    initials: "ES",
+  },
+  {
+    id: "liza",
+    quote:
+      "The monthly concert is the one night the whole barangay shows up together. It brings everyone, young and old, into the same square.",
+    name: "Liza M.",
+    role: "Neighbor and regular listener",
+    initials: "LM",
+  },
+  {
+    id: "noel",
+    quote:
+      "I borrow a trumpet from the lending library. I could never have afforded one on my own — the band simply handed me one and said, come back Saturday.",
+    name: "Noel B.",
+    role: "Youth student, age 14",
+    initials: "NB",
+  },
+  {
+    id: "grace",
+    quote:
+      "Volunteering as a librarian turned into learning the flute. Nobody here is too old or too busy to start.",
+    name: "Grace T.",
+    role: "Volunteer and adult beginner",
+    initials: "GT",
+  },
+  {
+    id: "ramon",
+    quote:
+      "Every donation we get goes back into the instruments the kids hold. You can see exactly where your help lands.",
+    name: "Ramon D.",
+    role: "Committee treasurer",
+    initials: "RD",
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/* Programs                                                            */
+/* ------------------------------------------------------------------ */
+export type Program = {
+  id: string;
+  title: string;
+  text: string;
+  who: string;
+  icon: IconType;
+};
+
+export const programs: Program[] = [
+  {
+    id: "youth",
+    title: "Youth Music Lessons",
+    text: "Weekly group lessons in brass, woodwind, and percussion. Families who cannot buy an instrument can borrow one from our lending library.",
+    who: "Ages 8 to 17",
+    icon: IconCap,
+  },
+  {
+    id: "concerts",
+    title: "Community Concerts",
+    text: "A free outdoor concert in the town plaza on the second Sunday of every month. Bring a chair, a blanket, and your neighbors.",
+    who: "All ages",
+    icon: IconMusic,
+  },
+  {
+    id: "senior",
+    title: "Senior Ensemble",
+    text: "A relaxed Saturday-afternoon group for adults who want to keep playing or finally learn. No audition needed.",
+    who: "Ages 55 and up",
+    icon: IconHeart,
+  },
+];

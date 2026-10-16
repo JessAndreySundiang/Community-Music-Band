@@ -1,0 +1,275 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap');
+@import "tailwindcss";
+
+/* Theme is driven by [data-theme] on <html>, so `dark:` maps to it. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ------------------------------------------------------------------ *
+ * Semantic tokens — these flip between Daytime (light) and Evening
+ * (dark). Components consume them through Tailwind utilities such as
+ * `bg-paper`, `text-body`, `border-line`, `text-brass`.
+ * ------------------------------------------------------------------ */
+:root {
+  /* Daytime: warm parchment so white cards separate clearly. */
+  --paper: #f8f2e6;
+  --paper-2: #f0e6d3;
+  --surface: #fffdf8;
+  --ink: #0d1b34;
+  --body: #1c2540;
+  --muted: #55607a;
+  --line: rgba(13, 27, 52, 0.14);
+  --brass: #8a5f12;
+  --brass-bright: #c9962b;
+  --plume: #a63a22;
+
+  /* Floating nav surfaces (must flip with the theme, so they are tokens). */
+  --nav: rgb(255 255 255 / 0.85);
+  --nav-line: rgb(13 27 52 / 0.12);
+  --nav-hover: rgb(13 27 52 / 0.06);
+
+  /* Ambient wash used by .band / .band-tint (light mode only). */
+  --band-a: rgb(201 150 43 / 0.1);
+  --band-b: rgb(207 81 56 / 0.06);
+
+  /* Daytime "stage": a warm golden-hour hero instead of the navy one. */
+  --stage-fg: #0d1b34;
+  --stage-muted: rgb(13 27 52 / 0.7);
+  --stage-line: rgb(13 27 52 / 0.1);
+  --stage-line-strong: rgb(13 27 52 / 0.18);
+  --stage-glass: rgb(255 255 255 / 0.5);
+  --stage-glass-strong: rgb(255 255 255 / 0.66);
+  --stage-hover: rgb(255 255 255 / 0.88);
+  --stage-ring: rgb(138 95 18 / 0.28);
+  --stage-staff: rgb(13 27 52 / 0.1);
+  --stage-glow-a: rgb(224 169 46 / 0.18);
+  --stage-glow-b: rgb(198 106 65 / 0.11);
+  --stage-grad-from: #faf3e2;
+  --stage-grad-mid: #f3e7cd;
+  --stage-grad-to: #e9d4aa;
+
+  /* Hero medallion: ivory in Daytime so the gold logo disc reads. */
+  --medal-from: #fffdf6;
+  --medal-to: #f8f0df;
+  --medal-ring: rgb(138 95 18 / 0.35);
+  --medal-glow: rgb(224 169 46 / 0.22);
+
+  --tile: rgb(201 150 43 / 0.16);
+  --tile-2: rgb(201 150 43 / 0.06);
+  --tile-line: rgb(138 95 18 / 0.22);
+  --tile-fg: #8a5f12;
+
+  --feature: #f7ecd5;
+  --feature-fg: #0d1b34;
+  --feature-muted: rgb(13 27 52 / 0.62);
+
+  --title-from: #8a5f12;
+  --title-to: #c9962b;
+
+  --sm-strong: #b9821a;
+  --sm-soft: #d9a83c;
+  --sm-glow: 0.16;
+}
+
+[data-theme="dark"] {
+  --paper: #080f1f;
+  --paper-2: #0e1729;
+  --surface: #131e37;
+  --ink: #f3f7ff;
+  --body: #e6ecf8;
+  --muted: #a3b0c9;
+  --line: rgba(232, 237, 248, 0.14);
+  --brass: #e9ba55;
+  --brass-bright: #e0a92e;
+  --plume: #ff8a74;
+
+  --nav: rgb(5 8 15 / 0.72);
+  --nav-line: rgb(255 255 255 / 0.1);
+  --nav-hover: rgb(255 255 255 / 0.1);
+
+  /* Evening already has its own depth; keep bands flat there. */
+  --band-a: transparent;
+  --band-b: transparent;
+
+  /* Evening "stage": the original deep concert navy. */
+  --stage-fg: #ffffff;
+  --stage-muted: rgb(255 255 255 / 0.7);
+  --stage-line: rgb(255 255 255 / 0.1);
+  --stage-line-strong: rgb(255 255 255 / 0.25);
+  --stage-glass: rgb(255 255 255 / 0.02);
+  --stage-glass-strong: rgb(255 255 255 / 0.06);
+  --stage-hover: rgb(255 255 255 / 0.04);
+  --stage-ring: rgb(252 211 77 / 0.25);
+  --stage-staff: rgb(255 255 255 / 0.07);
+  --stage-glow-a: rgb(224 169 46 / 0.3);
+  --stage-glow-b: rgb(43 88 150 / 0.55);
+  --stage-grad-from: #05080f;
+  --stage-grad-mid: #0a1428;
+  --stage-grad-to: #0e2038;
+
+  /* Hero medallion: the original brass medallion in Evening. */
+  --medal-from: #fcd34d;
+  --medal-to: #f59e0b;
+  --medal-ring: rgb(255 255 255 / 0.15);
+  --medal-glow: rgb(224 169 46 / 0.7);
+
+  --tile: #080f1f;
+  --tile-2: #22355c;
+  --tile-line: rgb(255 255 255 / 0.1);
+  --tile-fg: #e0a92e;
+
+  --feature: #080f1f;
+  --feature-fg: #ffffff;
+  --feature-muted: rgb(255 255 255 / 0.6);
+
+  --title-from: #fde9b8;
+  --title-to: #fbbf24;
+
+  --sm-strong: #e0a92e;
+  --sm-soft: #f4d488;
+  --sm-glow: 0.5;
+}
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Fraunces", Georgia, serif;
+
+  /* Fixed "stage" colors — always the deep concert navy, in both themes. */
+  --color-night-950: #05080f;
+  --color-night-900: #080f1f;
+  --color-night-800: #0e1729;
+  --color-night-700: #16233f;
+  --color-night-600: #22355c;
+
+  --animate-float: float 9s ease-in-out infinite;
+  --animate-float-slow: float 15s ease-in-out infinite;
+  --animate-pulse-soft: pulseSoft 7s ease-in-out infinite;
+  --animate-drift: drift 20s ease-in-out infinite;
+  --animate-spin-slow: spinSlow 48s linear infinite;
+  --animate-draw: drawLine 2.6s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  --animate-draw-slow: drawLine 3.6s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-body: var(--body);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brass: var(--brass);
+  --color-brass-bright: var(--brass-bright);
+  --color-plume: var(--plume);
+  --color-nav: var(--nav);
+  --color-nav-line: var(--nav-line);
+  --color-nav-hover: var(--nav-hover);
+  --color-stage-fg: var(--stage-fg);
+  --color-stage-muted: var(--stage-muted);
+  --color-stage-line: var(--stage-line);
+  --color-stage-line-strong: var(--stage-line-strong);
+  --color-stage-glass: var(--stage-glass);
+  --color-stage-glass-strong: var(--stage-glass-strong);
+  --color-stage-hover: var(--stage-hover);
+  --color-stage-ring: var(--stage-ring);
+  --color-tile: var(--tile);
+  --color-tile-2: var(--tile-2);
+  --color-tile-line: var(--tile-line);
+  --color-tile-fg: var(--tile-fg);
+  --color-feature: var(--feature);
+  --color-feature-fg: var(--feature-fg);
+  --color-feature-muted: var(--feature-muted);
+  --color-title-from: var(--title-from);
+  --color-title-to: var(--title-to);
+  --color-medal-from: var(--medal-from);
+  --color-medal-to: var(--medal-to);
+  --color-medal-ring: var(--medal-ring);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+@keyframes pulseSoft {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.65; }
+}
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -20px, 0) scale(1.06); }
+}
+@keyframes spinSlow {
+  to { transform: rotate(360deg); }
+}
+@keyframes drawLine {
+  from { stroke-dashoffset: 2400; }
+  to { stroke-dashoffset: 0; }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* `clip` (not `hidden`) prevents sideways scroll without
+       creating a scroll container, so the sticky header keeps working. */
+    overflow-x: clip;
+  }
+  body {
+    background-color: var(--paper);
+    color: var(--body);
+    font-family: var(--font-sans);
+    overflow-x: clip;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--brass-bright);
+    color: #14120a;
+  }
+  :focus-visible {
+    outline: 2px solid var(--brass-bright);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  /* Hero / page-hero / closing CTA surface. Flips from deep navy
+     (Evening) to a warm golden-hour wash (Daytime). */
+  .stage {
+    background-color: var(--stage-grad-mid);
+    background-image: radial-gradient(
+        60rem 40rem at 85% -10%,
+        var(--stage-glow-a),
+        transparent 60%
+      ),
+      radial-gradient(48rem 36rem at -10% 115%, var(--stage-glow-b), transparent 60%),
+      linear-gradient(
+        150deg,
+        var(--stage-grad-from),
+        var(--stage-grad-mid) 55%,
+        var(--stage-grad-to)
+      );
+    color: var(--stage-fg);
+  }
+
+  /* Soft ambient light so large light-mode bands don't read as flat. */
+  .band {
+    background-image: radial-gradient(
+      72rem 36rem at 50% -12%,
+      var(--band-a),
+      transparent 62%
+    );
+  }
+  .band-tint {
+    background-image: radial-gradient(
+      56rem 30rem at 88% 0%,
+      var(--band-b),
+      transparent 58%
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

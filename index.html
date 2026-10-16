@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Community Music Band is a volunteer, non-profit band offering free youth music lessons, a senior ensemble, and free monthly concerts for the whole community."
+    />
+    <meta name="theme-color" content="#080f1f" />
+    <meta property="og:title" content="Community Music Band Organization" />
+    <meta
+      property="og:description"
+      content="Free to learn, free to listen, free to join. A volunteer band making room for more music in our community."
+    />
+    <meta property="og:type" content="website" />
+    <title>Community Music Band Organization</title>
+    <script>
+      // Resolve the theme before first paint to avoid a flash.
+      (function () {
+        try {
+          var t = window.localStorage.getItem('cmb-theme');
+          if (t !== 'light' && t !== 'dark') t = 'dark';
+          document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
