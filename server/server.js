@@ -2,8 +2,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import Stripe from "stripe";
+import { createAlertQueue } from "./alert-queue.js";
 import { createApp } from "./app.js";
 import { createDonationStore } from "./donations.js";
+import { createMailerFromEnv } from "./mailer.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -29,10 +31,29 @@ const store = createDonationStore({
   file: process.env.DONATIONS_FILE || path.join(here, "data", "donations.jsonl"),
 });
 
+// Null unless a transport is configured, so an unconfigured server behaves
+// exactly as it did before email alerts existed. The same helper backs
+// `npm run check-mail`, so the two can never disagree about what is set up.
+const mailer = createMailerFromEnv();
+
+// Anything the mailer cannot deliver is kept on disk and retried on a backoff,
+// so a mail outage delays an alert instead of losing it.
+const alerts = mailer
+  ? createAlertQueue({
+      file: process.env.PENDING_ALERTS_FILE || path.join(here, "data", "pending-alerts.jsonl"),
+      deliver: (entry, options) => mailer.sendDonationAlert(entry, options),
+    })
+  : null;
+
+// Awaits only the queue file read, never a send, so a mail outage cannot delay
+// the API starting.
+if (alerts) await alerts.start();
+
 const app = createApp({
   stripe: new Stripe(secretKey),
   store,
   webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || undefined,
+  alerts,
 });
 
 const port = Number(process.env.PORT) || 4242;
@@ -43,6 +64,17 @@ const server = app.listen(port, () => {
     console.log(
       "No STRIPE_WEBHOOK_SECRET set — completed gifts will not be written to the ledger.",
     );
+  }
+  if (alerts) {
+    console.log(`Donation alerts: ${mailer.transports.join(" then ")} -> ${mailer.to}.`);
+    if (alerts.pending) {
+      console.log(`Retrying ${alerts.pending} undelivered alert(s) from ${alerts.file}.`);
+    }
+    if (!process.env.STRIPE_WEBHOOK_SECRET) {
+      console.log(
+        "Donation alerts stay silent until STRIPE_WEBHOOK_SECRET is set — the webhook is what confirms a gift.",
+      );
+    }
   }
 });
 

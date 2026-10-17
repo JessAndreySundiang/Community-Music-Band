@@ -4,7 +4,9 @@ import path from "node:path";
 import Stripe from "stripe";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DONATION_CURRENCY, createApp, createRateLimiter, parseAmountToCents } from "./app.js";
+import { createAlertQueue } from "./alert-queue.js";
 import { createDonationStore } from "./donations.js";
+import { buildDonationAlert, createMailer, createMailerFromEnv } from "./mailer.js";
 
 const silentLogger = { log() {}, warn() {}, error() {} };
 
@@ -227,6 +229,14 @@ describe("stripe webhook", () => {
     stripe.webhooks.constructEvent.mockReturnValue(event);
   }
 
+  function postSignedWebhook(base, body = "{}") {
+    return fetch(`${base}/stripe-webhook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "stripe-signature": "sig" },
+      body,
+    });
+  }
+
   it("answers 503 when no webhook secret is configured", async () => {
     const base = await startApp({ stripe: stripeStub() });
     const res = await fetch(`${base}/stripe-webhook`, {
@@ -329,6 +339,113 @@ describe("stripe webhook", () => {
     });
 
     expect(res.status).toBe(500);
+  });
+
+  it.each([
+    [false, true],
+    [true, false],
+  ])("flags a livemode=%s event as testMode=%s", async (livemode, testMode) => {
+    const store = createDonationStore({ file: await tempLedger() });
+    const alerts = { notify: vi.fn(async () => true) };
+    const stripe = stripeStub();
+    signedEvent(stripe, {
+      type: "payment_intent.succeeded",
+      livemode,
+      data: { object: { id: "pi_mode", amount: 100, currency: "usd", status: "succeeded" } },
+    });
+    const base = await startApp({ stripe, store, webhookSecret: "whsec_test", alerts });
+
+    await postSignedWebhook(base);
+
+    expect(alerts.notify).toHaveBeenCalledWith(expect.anything(), { testMode });
+  });
+
+  it("alerts once per gift, even when Stripe retries the event", async () => {
+    const file = await tempLedger();
+    const store = createDonationStore({ file });
+    const alerts = { notify: vi.fn(async () => true) };
+    const stripe = stripeStub();
+    signedEvent(stripe, {
+      type: "payment_intent.succeeded",
+      livemode: false,
+      data: {
+        object: {
+          id: "pi_mailed",
+          amount: 2500,
+          currency: "usd",
+          status: "succeeded",
+          metadata: { donor_name: "Grace" },
+          receipt_email: "grace@example.com",
+        },
+      },
+    });
+    const base = await startApp({ stripe, store, webhookSecret: "whsec_test", alerts });
+
+    expect((await postSignedWebhook(base)).status).toBe(200);
+    // The same event arriving twice is the normal case: Stripe retries.
+    expect((await postSignedWebhook(base)).status).toBe(200);
+
+    expect(alerts.notify).toHaveBeenCalledOnce();
+    expect(alerts.notify).toHaveBeenCalledWith(
+      expect.objectContaining({
+        paymentIntentId: "pi_mailed",
+        amountUsd: 25,
+        donorName: "Grace",
+        email: "grace@example.com",
+      }),
+      { testMode: true },
+    );
+  });
+
+  it("answers 200 when the alert cannot be handed over, so Stripe does not replay the gift", async () => {
+    const file = await tempLedger();
+    const store = createDonationStore({ file });
+    const alerts = {
+      notify: vi.fn(async () => {
+        throw new Error("queue exploded");
+      }),
+    };
+    const stripe = stripeStub();
+    signedEvent(stripe, {
+      type: "payment_intent.succeeded",
+      livemode: true,
+      data: { object: { id: "pi_nomail", amount: 500, currency: "usd", status: "succeeded" } },
+    });
+    const base = await startApp({ stripe, store, webhookSecret: "whsec_test", alerts });
+
+    expect((await postSignedWebhook(base)).status).toBe(200);
+    // An alert problem must never cost us the record of the gift itself.
+    expect((await readFile(file, "utf8")).trim().split("\n")).toHaveLength(1);
+  });
+
+  it("says so when the alert had to be queued for a retry", async () => {
+    const logs = [];
+    const logger = { log: (line) => logs.push(line), warn() {}, error() {} };
+    const store = createDonationStore({ file: await tempLedger() });
+    const alerts = { notify: vi.fn(async () => false) };
+    const stripe = stripeStub();
+    signedEvent(stripe, {
+      type: "payment_intent.succeeded",
+      data: { object: { id: "pi_queued", amount: 500, currency: "usd", status: "succeeded" } },
+    });
+    const base = await startApp({ stripe, store, webhookSecret: "whsec_test", alerts, logger });
+
+    expect((await postSignedWebhook(base)).status).toBe(200);
+    expect(logs.join("\n")).toContain("Queued the donation alert for pi_queued");
+  });
+
+  it("does not alert when there is no ledger to deduplicate against", async () => {
+    const alerts = { notify: vi.fn() };
+    const stripe = stripeStub();
+    signedEvent(stripe, {
+      type: "payment_intent.succeeded",
+      data: { object: { id: "pi_nostore", amount: 500, currency: "usd", status: "succeeded" } },
+    });
+    // No `store`, so nothing can prove the gift is new and a retry would repeat the alert.
+    const base = await startApp({ stripe, webhookSecret: "whsec_test", alerts });
+
+    expect((await postSignedWebhook(base)).status).toBe(200);
+    expect(alerts.notify).not.toHaveBeenCalled();
   });
 });
 
@@ -446,5 +563,377 @@ describe("webhook signature verification (real Stripe SDK)", () => {
     });
 
     expect((await sendWebhook(base, tampered, header)).status).toBe(400);
+  });
+});
+
+// These never touch the network: buildDonationAlert builds the message as data,
+// and createMailer only configures a transport (nodemailer connects on send).
+describe("donation alert email", () => {
+  const entry = {
+    recordedAt: "2026-01-01T00:00:00.000Z",
+    paymentIntentId: "pi_alert",
+    amountUsd: 25,
+    currency: "usd",
+    status: "succeeded",
+    donorName: "Grace",
+    email: "grace@example.com",
+  };
+
+  it("addresses the alert to the band and can be replied to the donor", () => {
+    const mail = buildDonationAlert(entry, { from: "Band <band@gmail.com>", to: "band@gmail.com" });
+
+    expect(mail).toMatchObject({
+      from: "Band <band@gmail.com>",
+      to: "band@gmail.com",
+      replyTo: "grace@example.com",
+      subject: "Donation received — $25.00 USD",
+    });
+    expect(mail.text).toContain("Payment: pi_alert");
+    expect(mail.text).toContain("Mode:    LIVE");
+  });
+
+  it("labels a sandbox gift in both the subject and the body", () => {
+    const mail = buildDonationAlert(entry, { testMode: true, to: "band@gmail.com" });
+
+    expect(mail.subject).toBe("[TEST] Donation received — $25.00 USD");
+    expect(mail.text).toContain("Mode:    TEST — sandbox, no real money moved");
+  });
+
+  it("copes with a donor who left no email address", () => {
+    const mail = buildDonationAlert({ ...entry, email: null }, { to: "band@gmail.com" });
+
+    expect(mail.replyTo).toBeUndefined();
+    expect(mail.text).toContain("Email:   not provided");
+  });
+});
+
+describe("createMailer", () => {
+  const credentials = { user: "band@gmail.com", appPassword: "sixteencharslong" };
+
+  it("stays switched off while the Gmail credentials are missing", () => {
+    expect(createMailer()).toBeNull();
+    expect(createMailer({})).toBeNull();
+  });
+
+  it("warns when only half of the credentials are present", () => {
+    const logger = { warn: vi.fn() };
+
+    expect(createMailer({ user: credentials.user, logger })).toBeNull();
+    expect(logger.warn).toHaveBeenCalledOnce();
+  });
+
+  it("defaults the recipient to the sending account", () => {
+    expect(createMailer(credentials).to).toBe("band@gmail.com");
+  });
+
+  it("sends to an explicit recipient when one is configured", () => {
+    const mailer = createMailer({ ...credentials, notifyTo: "treasurer@gmail.com" });
+
+    expect(mailer.to).toBe("treasurer@gmail.com");
+  });
+
+  it("hands the composed alert to the transport, sent from the Gmail account", async () => {
+    const transport = { sendMail: vi.fn(async () => ({})) };
+    const mailer = createMailer({ ...credentials, transport });
+
+    await mailer.sendDonationAlert(
+      {
+        recordedAt: "2026-01-01T00:00:00.000Z",
+        paymentIntentId: "pi_transport",
+        amountUsd: 25,
+        currency: "usd",
+        donorName: "Grace",
+        email: "grace@example.com",
+      },
+      { testMode: false },
+    );
+
+    expect(transport.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: "Community Music Band <band@gmail.com>",
+        to: "band@gmail.com",
+        subject: "Donation received — $25.00 USD",
+      }),
+    );
+  });
+
+  // Minimal alert used by the failover tests below.
+  const alert = { paymentIntentId: "pi_chain", amountUsd: 25, currency: "usd", donorName: "Grace" };
+  const relayConfig = {
+    host: "smtp-relay.brevo.com",
+    user: "brevo@example.com",
+    password: "smtp-key",
+  };
+
+  it("stays on Gmail when Gmail works, without touching the relay", async () => {
+    const transport = { sendMail: vi.fn(async () => ({})) };
+    const fallbackTransport = { sendMail: vi.fn(async () => ({})) };
+    const mailer = createMailer({
+      ...credentials,
+      transport,
+      fallback: relayConfig,
+      fallbackTransport,
+      logger: silentLogger,
+    });
+
+    await mailer.sendDonationAlert(alert);
+
+    expect(transport.sendMail).toHaveBeenCalledOnce();
+    expect(fallbackTransport.sendMail).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the relay when Gmail refuses the message", async () => {
+    const transport = { sendMail: vi.fn(async () => Promise.reject(new Error("gmail down"))) };
+    const fallbackTransport = { sendMail: vi.fn(async () => ({})) };
+    const mailer = createMailer({
+      ...credentials,
+      transport,
+      fallback: relayConfig,
+      fallbackTransport,
+      logger: silentLogger,
+    });
+
+    await expect(mailer.sendDonationAlert(alert)).resolves.toBeUndefined();
+
+    expect(transport.sendMail).toHaveBeenCalledOnce();
+    expect(fallbackTransport.sendMail).toHaveBeenCalledOnce();
+    expect(fallbackTransport.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: "Community Music Band <band@gmail.com>",
+        to: "band@gmail.com",
+      }),
+    );
+  });
+
+  it("reports both failures when the relay fails too", async () => {
+    const transport = { sendMail: vi.fn(async () => Promise.reject(new Error("gmail down"))) };
+    const fallbackTransport = {
+      sendMail: vi.fn(async () => Promise.reject(new Error("relay down"))),
+    };
+    const mailer = createMailer({
+      ...credentials,
+      transport,
+      fallback: relayConfig,
+      fallbackTransport,
+      logger: silentLogger,
+    });
+
+    await expect(mailer.sendDonationAlert(alert)).rejects.toThrow(
+      /Gmail: gmail down.*relay smtp-relay\.brevo\.com: relay down/,
+    );
+  });
+
+  it("lists the transports in the order it will try them", () => {
+    const mailer = createMailer({
+      ...credentials,
+      fallback: relayConfig,
+      fallbackTransport: { sendMail: vi.fn() },
+    });
+
+    expect(mailer.transports).toEqual(["Gmail", "relay smtp-relay.brevo.com"]);
+  });
+
+  it("can run on the relay alone, with no Gmail account at all", () => {
+    const mailer = createMailer({
+      notifyTo: "band@gmail.com",
+      fallback: relayConfig,
+      fallbackTransport: { sendMail: vi.fn() },
+    });
+
+    expect(mailer).not.toBeNull();
+    expect(mailer.to).toBe("band@gmail.com");
+    expect(mailer.transports).toEqual(["relay smtp-relay.brevo.com"]);
+  });
+
+  it("reports each login separately for check-mail, and closes every transport", async () => {
+    const transport = { sendMail: vi.fn(), verify: vi.fn(async () => true), close: vi.fn() };
+    const fallbackTransport = {
+      sendMail: vi.fn(),
+      verify: vi.fn(async () => Promise.reject(new Error("535 Authentication failed"))),
+      close: vi.fn(),
+    };
+    const mailer = createMailer({
+      ...credentials,
+      transport,
+      fallback: relayConfig,
+      fallbackTransport,
+      logger: silentLogger,
+    });
+
+    expect(await mailer.verify()).toEqual([
+      { label: "Gmail", ok: true },
+      { label: "relay smtp-relay.brevo.com", ok: false, error: "535 Authentication failed" },
+    ]);
+
+    await mailer.close();
+    expect(transport.close).toHaveBeenCalledOnce();
+    expect(fallbackTransport.close).toHaveBeenCalledOnce();
+  });
+});
+
+describe("createMailerFromEnv", () => {
+  const env = {
+    GMAIL_USER: "band@gmail.com",
+    GMAIL_APP_PASSWORD: "sixteencharslong",
+    DONATION_NOTIFY_TO: "treasurer@gmail.com",
+    SMTP_FALLBACK_HOST: "smtp-relay.brevo.com",
+    SMTP_FALLBACK_PORT: "587",
+    SMTP_FALLBACK_USER: "band@gmail.com",
+    SMTP_FALLBACK_PASSWORD: "xsmtpsib-key",
+    SMTP_FALLBACK_FROM: "band@gmail.com",
+  };
+
+  it("wires Gmail first and the relay second", () => {
+    const mailer = createMailerFromEnv(env, silentLogger);
+
+    expect(mailer.transports).toEqual(["Gmail", "relay smtp-relay.brevo.com"]);
+    expect(mailer.to).toBe("treasurer@gmail.com");
+  });
+
+  it("supports the relay on its own, which is the Brevo-only setup", () => {
+    const mailer = createMailerFromEnv(
+      { ...env, GMAIL_USER: "", GMAIL_APP_PASSWORD: "" },
+      silentLogger,
+    );
+
+    expect(mailer.transports).toEqual(["relay smtp-relay.brevo.com"]);
+  });
+
+  it("treats an empty environment as no mail at all", () => {
+    expect(createMailerFromEnv({}, silentLogger)).toBeNull();
+  });
+});
+
+describe("alert retry queue", () => {
+  const alert = {
+    paymentIntentId: "pi_waiting",
+    amountUsd: 10,
+    currency: "usd",
+    donorName: "Grace",
+  };
+
+  async function tempQueueFile() {
+    const dir = await mkdtemp(path.join(tmpdir(), "cmb-alerts-"));
+    tempDirs.push(dir);
+    return path.join(dir, "pending-alerts.jsonl");
+  }
+
+  it("delivers straight away and leaves no file behind when the mailer works", async () => {
+    const file = await tempQueueFile();
+    const deliver = vi.fn(async () => {});
+    const queue = createAlertQueue({ file, deliver, logger: silentLogger });
+
+    expect(await queue.notify(alert, { testMode: true })).toBe(true);
+    expect(deliver).toHaveBeenCalledWith(alert, { testMode: true });
+    expect(queue.pending).toBe(0);
+    await expect(readFile(file, "utf8")).rejects.toThrow();
+  });
+
+  it("keeps the alert on disk when delivery fails", async () => {
+    const file = await tempQueueFile();
+    const deliver = vi.fn(async () => {
+      throw new Error("smtp down");
+    });
+    const queue = createAlertQueue({ file, deliver, logger: silentLogger });
+
+    expect(await queue.notify(alert, { testMode: false })).toBe(false);
+    expect(queue.pending).toBe(1);
+
+    const [saved] = (await readFile(file, "utf8"))
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    expect(saved).toMatchObject({
+      attempts: 0,
+      lastError: "smtp down",
+      entry: alert,
+      options: { testMode: false },
+    });
+    expect(saved.queuedAt).toBeTruthy();
+  });
+
+  it("drains the queue by itself once the mailer recovers", async () => {
+    const file = await tempQueueFile();
+    let working = false;
+    const deliver = vi.fn(async () => {
+      if (!working) throw new Error("smtp down");
+    });
+    const queue = createAlertQueue({ file, deliver, logger: silentLogger });
+
+    await queue.notify(alert, {});
+    expect(queue.pending).toBe(1);
+
+    working = true;
+
+    expect(await queue.retryPending()).toBe(0);
+    expect(queue.pending).toBe(0);
+    await expect(readFile(file, "utf8")).rejects.toThrow();
+  });
+
+  it("counts the attempts and remembers why it is still failing", async () => {
+    const file = await tempQueueFile();
+    const deliver = vi.fn(async () => {
+      throw new Error("still down");
+    });
+    const queue = createAlertQueue({ file, deliver, logger: silentLogger });
+
+    await queue.notify(alert, {});
+    expect(await queue.retryPending()).toBe(1);
+    expect(await queue.retryPending()).toBe(1);
+
+    const [saved] = (await readFile(file, "utf8"))
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    expect(saved).toMatchObject({ attempts: 2, lastError: "still down" });
+  });
+
+  it("picks up alerts left behind by an earlier process", async () => {
+    const file = await tempQueueFile();
+    const first = createAlertQueue({
+      file,
+      deliver: async () => {
+        throw new Error("down");
+      },
+      logger: silentLogger,
+    });
+    await first.notify(alert, {});
+
+    const deliver = vi.fn(async () => {});
+    const restarted = createAlertQueue({ file, deliver, logger: silentLogger });
+    await restarted.load();
+    expect(restarted.pending).toBe(1);
+
+    expect(await restarted.retryPending()).toBe(0);
+    expect(deliver).toHaveBeenCalledOnce();
+  });
+
+  it("retries on its own after start(), then stops cleanly", async () => {
+    const file = await tempQueueFile();
+    let working = false;
+    const deliver = vi.fn(async () => {
+      if (!working) throw new Error("down");
+    });
+    const queue = createAlertQueue({
+      file,
+      deliver,
+      logger: silentLogger,
+      retryDelaysMs: [5],
+    });
+
+    await queue.notify(alert, {});
+    expect(queue.pending).toBe(1);
+
+    working = true;
+    await queue.start();
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    queue.stop();
+
+    expect(queue.pending).toBe(0);
+  });
+
+  it("refuses to be built without a file or a deliver function", () => {
+    expect(() => createAlertQueue({})).toThrow();
+    expect(() => createAlertQueue({ file: "pending.jsonl" })).toThrow();
   });
 });

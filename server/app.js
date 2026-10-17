@@ -58,7 +58,7 @@ export function createRateLimiter({ limit = 30, windowMs = 60_000 } = {}) {
 }
 
 /** Verifies and stores a Stripe webhook event. */
-async function handleWebhook(req, res, { stripe, store, logger, webhookSecret }) {
+async function handleWebhook(req, res, { stripe, store, logger, webhookSecret, alerts }) {
   if (!webhookSecret) {
     return res.status(503).json({ error: "Webhooks are not configured on this server." });
   }
@@ -83,17 +83,36 @@ async function handleWebhook(req, res, { stripe, store, logger, webhookSecret })
       email: intent.receipt_email ?? null,
     };
 
+    let written;
     try {
-      const written = await store.record(entry);
-      logger.log(
-        written
-          ? `Recorded donation ${intent.id} ($${entry.amountUsd.toFixed(2)}).`
-          : `Donation ${intent.id} was already recorded.`,
-      );
+      written = await store.record(entry);
     } catch (err) {
       // Returning 500 makes Stripe retry, so a full disk cannot silently lose a gift.
       logger.error("Could not record donation:", err.message);
       return res.status(500).json({ error: "Could not record the donation." });
+    }
+
+    logger.log(
+      written
+        ? `Recorded donation ${intent.id} ($${entry.amountUsd.toFixed(2)}).`
+        : `Donation ${intent.id} was already recorded.`,
+    );
+
+    // Only a first-time record is announced. Stripe retries the same event, so
+    // the ledger's dedupe is what keeps this to one alert per gift.
+    if (written && alerts) {
+      try {
+        const delivered = await alerts.notify(entry, { testMode: event.livemode === false });
+        logger.log(
+          delivered
+            ? `Emailed the donation alert for ${intent.id}.`
+            : `Queued the donation alert for ${intent.id} for retry.`,
+        );
+      } catch (err) {
+        // The queue is built never to throw; this only guards against a bug in
+        // it turning into a 500 that makes Stripe replay an already-recorded gift.
+        logger.error("Could not hand the donation alert to the queue:", err.message);
+      }
     }
   }
 
@@ -104,7 +123,14 @@ async function handleWebhook(req, res, { stripe, store, logger, webhookSecret })
  * Builds the Express app. Environment is read here (not at module scope) so that
  * dotenv has already run by the time this is called.
  */
-export function createApp({ stripe, store, logger = console, webhookSecret, rateLimit } = {}) {
+export function createApp({
+  stripe,
+  store,
+  logger = console,
+  webhookSecret,
+  rateLimit,
+  alerts,
+} = {}) {
   if (!stripe) throw new Error("createApp() needs a Stripe client.");
 
   const extraOrigins = (process.env.CORS_ORIGINS ?? "")
@@ -131,7 +157,7 @@ export function createApp({ stripe, store, logger = console, webhookSecret, rate
 
   // Stripe signs the raw bytes, so this route must be mounted before express.json().
   app.post("/stripe-webhook", express.raw({ type: "application/json" }), (req, res) =>
-    handleWebhook(req, res, { stripe, store, logger, webhookSecret }),
+    handleWebhook(req, res, { stripe, store, logger, webhookSecret, alerts }),
   );
 
   app.use(express.json({ limit: "10kb" }));
@@ -156,6 +182,8 @@ export function createApp({ stripe, store, logger = console, webhookSecret, rate
       maxUsd: DONATION_MAX_USD,
       ledger: Boolean(store),
       webhooks: Boolean(webhookSecret),
+      mail: Boolean(alerts),
+      pendingAlerts: alerts?.pending ?? 0,
     });
   });
 
