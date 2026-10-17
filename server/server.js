@@ -1,49 +1,59 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const Stripe = require("stripe");
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
+import Stripe from "stripe";
+import { createApp } from "./app.js";
+import { createDonationStore } from "./donations.js";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+
+// Resolve server/.env next to THIS file, not against the caller's cwd.
+// Running `node server/server.js` from the project root would otherwise load the
+// front-end's root .env (which only has VITE_STRIPE_PUBLISHABLE_KEY), leaving
+// STRIPE_SECRET_KEY undefined and killing the server on boot.
+const envFile = path.join(here, ".env");
+dotenv.config({ path: envFile });
 
 const secretKey = process.env.STRIPE_SECRET_KEY;
+
 if (!secretKey || !secretKey.startsWith("sk_test_")) {
-  console.error("Missing or invalid STRIPE_SECRET_KEY in server/.env (it must start with sk_test_).");
+  console.error(
+    `Missing or invalid STRIPE_SECRET_KEY in ${envFile} (it must start with sk_test_).`,
+  );
+  console.error("Copy server/.env.example to server/.env and paste a test key from");
+  console.error("https://dashboard.stripe.com/test/apikeys, then restart the server.");
   process.exit(1);
 }
 
-const stripe = new Stripe(secretKey);
-const app = express();
-
-app.use(cors({ origin: ["http://localhost:5173", "http://127.0.0.1:5173"] }));
-app.use(express.json());
-
-app.get("/", (req, res) => {
-  res.send("Donation server is running.");
+const store = createDonationStore({
+  file: process.env.DONATIONS_FILE || path.join(here, "data", "donations.jsonl"),
 });
 
-app.post("/create-payment-intent", async (req, res) => {
-  try {
-    const { amount, name, email } = req.body;
-    const dollars = Number(amount);
+const app = createApp({
+  stripe: new Stripe(secretKey),
+  store,
+  webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || undefined,
+});
 
-    if (!Number.isFinite(dollars) || dollars < 1 || dollars > 1000) {
-      return res.status(400).json({ error: "Donation must be between $1 and $1000." });
-    }
-
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(dollars * 100),
-      currency: "usd",
-      automatic_payment_methods: { enabled: true, allow_redirects: "never" },
-      description: "Donation to Community Music Band Organization",
-      receipt_email: email || undefined,
-      metadata: { donor_name: name || "Anonymous" },
-    });
-
-    res.json({ clientSecret: paymentIntent.client_secret });
-  } catch (err) {
-    console.error("Stripe error:", err.message);
-    res.status(500).json({ error: err.message });
+const port = Number(process.env.PORT) || 4242;
+const server = app.listen(port, () => {
+  console.log(`Donation server running at http://localhost:${port}`);
+  console.log(`Donation ledger: ${store.file}`);
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.log(
+      "No STRIPE_WEBHOOK_SECRET set — completed gifts will not be written to the ledger.",
+    );
   }
 });
 
-app.listen(4242, () => {
-  console.log("Donation server running at http://localhost:4242");
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(
+      `Port ${port} is already in use — another donation server is probably still running.`,
+    );
+    console.error("Stop it, or start this one on a different port with PORT=4243.");
+  } else {
+    console.error("Donation server failed to start:", err.message);
+  }
+  process.exit(1);
 });

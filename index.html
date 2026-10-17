@@ -2,29 +2,90 @@
 <html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!--
+      Fonts are loaded with a plain <link> plus preconnect rather than a CSS
+      @import: an @import blocks rendering until the stylesheet returns, and it
+      hides the font host from the preload scanner.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap"
+    />
+
+    <title>Community Music Band Organization</title>
     <meta
       name="description"
-      content="Community Music Band is a volunteer, non-profit band offering free youth music lessons, a senior ensemble, and free monthly concerts for the whole community."
+      content="Community Music Band is a volunteer, non-profit band in Pampanga offering free youth music lessons, a senior ensemble, and free monthly concerts for the whole community."
     />
+    <!-- Replace communitymusicband.example with the real domain before launch. -->
+    <link rel="canonical" href="https://communitymusicband.example/" />
     <meta name="theme-color" content="#080f1f" />
-    <meta property="og:title" content="Community Music Band Organization" />
+
+    <!-- Social sharing -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Community Music Band Organization" />
+    <meta property="og:title" content="Music that belongs to everyone" />
     <meta
       property="og:description"
       content="Free to learn, free to listen, free to join. A volunteer band making room for more music in our community."
     />
-    <meta property="og:type" content="website" />
-    <title>Community Music Band Organization</title>
+    <meta property="og:url" content="https://communitymusicband.example/" />
+    <meta property="og:image" content="https://communitymusicband.example/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="The Community Music Band logo beside the line: Music that belongs to everyone."
+    />
+    <meta property="og:locale" content="en_PH" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Music that belongs to everyone" />
+    <meta
+      name="twitter:description"
+      content="Free to learn, free to listen, free to join. A volunteer band making room for more music in our community."
+    />
+    <meta name="twitter:image" content="https://communitymusicband.example/og-image.jpg" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "NGO",
+        "name": "Community Music Band Organization",
+        "url": "https://communitymusicband.example/",
+        "logo": "https://communitymusicband.example/favicon.svg",
+        "image": "https://communitymusicband.example/og-image.jpg",
+        "description": "A volunteer, non-profit community band offering free youth music lessons, a senior ensemble, and free monthly concerts.",
+        "telephone": "+63-994-329-5457",
+        "foundingDate": "2012",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Pandacaqui, Mexico",
+          "addressRegion": "Pampanga",
+          "addressCountry": "PH"
+        },
+        "areaServed": {
+          "@type": "AdministrativeArea",
+          "name": "Pampanga, Philippines"
+        },
+        "knowsAbout": ["community music", "music education", "free public concerts"]
+      }
+    </script>
+
     <script>
       // Resolve the theme before first paint to avoid a flash.
       (function () {
         try {
-          var t = window.localStorage.getItem('cmb-theme');
-          if (t !== 'light' && t !== 'dark') t = 'dark';
-          document.documentElement.setAttribute('data-theme', t);
+          var t = window.localStorage.getItem("cmb-theme");
+          if (t !== "light" && t !== "dark") t = "dark";
+          document.documentElement.setAttribute("data-theme", t);
         } catch (e) {
-          document.documentElement.setAttribute('data-theme', 'dark');
+          document.documentElement.setAttribute("data-theme", "dark");
         }
       })();
     </script>

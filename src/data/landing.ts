@@ -2,9 +2,12 @@ import type { ComponentType, SVGProps } from "react";
 import {
   IconCalendar,
   IconCap,
+  IconFacebook,
   IconHeart,
+  IconInstagram,
   IconMusic,
   IconUsers,
+  IconYouTube,
 } from "../components/Icons";
 
 /** Every icon in the shared set shares this signature. */
@@ -181,3 +184,34 @@ export const programs: Program[] = [
     icon: IconHeart,
   },
 ];
+
+/* ------------------------------------------------------------------ */
+/* Footer                                                              */
+/* ------------------------------------------------------------------ */
+export type SocialLink = { label: string; href: string; icon: IconType };
+
+/**
+ * TODO: swap these for the band's own profile URLs. They currently point at
+ * each platform's home page, so the icons are never broken links, but they do
+ * not take a visitor to the band yet.
+ */
+export const socials: SocialLink[] = [
+  { label: "Facebook", href: "https://facebook.com", icon: IconFacebook },
+  { label: "Instagram", href: "https://instagram.com", icon: IconInstagram },
+  { label: "YouTube", href: "https://youtube.com", icon: IconYouTube },
+];
+
+export type LegalLink = { label: string; to: string };
+
+export const legalLinks: LegalLink[] = [
+  { label: "Privacy", to: "/privacy" },
+  { label: "Terms", to: "/terms" },
+  { label: "Accessibility", to: "/accessibility" },
+];
+
+/** Shared by the footer and the accessibility statement. */
+export const contact = {
+  phoneLabel: "0994-329-5457",
+  phoneHref: "tel:+639943295457",
+  address: "Pandacaqui, Mexico, Pampanga, Philippines",
+} as const;

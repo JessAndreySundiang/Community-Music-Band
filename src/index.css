@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap');
 @import "tailwindcss";
 
 /* Theme is driven by [data-theme] on <html>, so `dark:` maps to it. */
@@ -186,23 +185,44 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-14px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
 }
 @keyframes pulseSoft {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.65; }
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.65;
+  }
 }
 @keyframes drift {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(0, -20px, 0) scale(1.06); }
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -20px, 0) scale(1.06);
+  }
 }
 @keyframes spinSlow {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 @keyframes drawLine {
-  from { stroke-dashoffset: 2400; }
-  to { stroke-dashoffset: 0; }
+  from {
+    stroke-dashoffset: 2400;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 @layer base {
@@ -236,11 +256,8 @@
      (Evening) to a warm golden-hour wash (Daytime). */
   .stage {
     background-color: var(--stage-grad-mid);
-    background-image: radial-gradient(
-        60rem 40rem at 85% -10%,
-        var(--stage-glow-a),
-        transparent 60%
-      ),
+    background-image:
+      radial-gradient(60rem 40rem at 85% -10%, var(--stage-glow-a), transparent 60%),
       radial-gradient(48rem 36rem at -10% 115%, var(--stage-glow-b), transparent 60%),
       linear-gradient(
         150deg,
@@ -253,18 +270,10 @@
 
   /* Soft ambient light so large light-mode bands don't read as flat. */
   .band {
-    background-image: radial-gradient(
-      72rem 36rem at 50% -12%,
-      var(--band-a),
-      transparent 62%
-    );
+    background-image: radial-gradient(72rem 36rem at 50% -12%, var(--band-a), transparent 62%);
   }
   .band-tint {
-    background-image: radial-gradient(
-      56rem 30rem at 88% 0%,
-      var(--band-b),
-      transparent 58%
-    );
+    background-image: radial-gradient(56rem 30rem at 88% 0%, var(--band-b), transparent 58%);
   }
 }
 

@@ -5,14 +5,9 @@ import MetricCard from "../components/MetricCard";
 import ProgramCard from "../components/ProgramCard";
 import EventCard from "../components/EventCard";
 import TestimonialCard from "../components/TestimonialCard";
-import {
-  IconArrowRight,
-  IconHeart,
-  IconSparkle,
-  IconTicket,
-  IconCheck,
-} from "../components/Icons";
+import { IconArrowRight, IconHeart, IconSparkle, IconTicket, IconCheck } from "../components/Icons";
 import { events, metrics, programs, testimonials } from "../data/landing";
+import { usePageTitle } from "../lib/usePageTitle";
 import logo from "../assets/logo.svg";
 
 const trustPoints = ["No auditions", "No fees, ever", "Instruments to borrow"];
@@ -21,6 +16,7 @@ const btnFocus =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stage-fg";
 
 function Home() {
+  usePageTitle("");
   const nextEvent = events[0];
 
   return (
@@ -37,8 +33,7 @@ function Home() {
           {/* Copy */}
           <div className="max-w-xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-stage-line-strong bg-stage-glass-strong px-4 py-1.5 text-[0.72rem] font-bold uppercase tracking-widest text-tile-fg backdrop-blur-sm">
-              <IconSparkle className="size-4" />
-              A volunteer band for every neighbor
+              <IconSparkle className="size-4" />A volunteer band for every neighbor
             </span>
 
             <h1 className="mt-6 font-serif text-4xl font-semibold leading-[1.05] tracking-tight text-balance md:text-6xl">

@@ -53,7 +53,10 @@ export default function SheetMusic({ className = "" }: { className?: string }) {
           <stop offset="1" style={{ stopColor: "var(--sm-strong)" }} stopOpacity="0" />
         </linearGradient>
         <radialGradient id="sm-glow" cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" style={{ stopColor: "var(--sm-strong)", stopOpacity: "var(--sm-glow)" }} />
+          <stop
+            offset="0"
+            style={{ stopColor: "var(--sm-strong)", stopOpacity: "var(--sm-glow)" }}
+          />
           <stop offset="1" style={{ stopColor: "var(--sm-strong)", stopOpacity: 0 }} />
         </radialGradient>
       </defs>
@@ -99,8 +102,18 @@ export default function SheetMusic({ className = "" }: { className?: string }) {
 
       {/* pulsing note nodes */}
       {nodes.map((n, i) => (
-        <g key={i} className="motion-safe:animate-pulse-soft" style={{ animationDelay: `${n.delay}ms` }}>
-          <circle cx={n.cx} cy={n.cy} r="9" style={{ fill: "var(--sm-strong)" }} fillOpacity="0.14" />
+        <g
+          key={i}
+          className="motion-safe:animate-pulse-soft"
+          style={{ animationDelay: `${n.delay}ms` }}
+        >
+          <circle
+            cx={n.cx}
+            cy={n.cy}
+            r="9"
+            style={{ fill: "var(--sm-strong)" }}
+            fillOpacity="0.14"
+          />
           <circle cx={n.cx} cy={n.cy} r="3.2" style={{ fill: "var(--sm-soft)" }} />
         </g>
       ))}

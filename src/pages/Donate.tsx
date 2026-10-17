@@ -5,6 +5,8 @@ import PageHero from "../components/PageHero";
 import SectionHeading from "../components/SectionHeading";
 import { IconCap, IconMusic, IconTicket } from "../components/Icons";
 import { stripePromise, hasStripeKey } from "../lib/stripe";
+import { DONATION_MAX_USD, DONATION_MIN_USD, parseDonationAmount } from "../lib/donation";
+import { usePageTitle } from "../lib/usePageTitle";
 
 type Receipt = {
   id: string;
@@ -36,11 +38,11 @@ const impact = [
 ];
 
 function Donate() {
+  usePageTitle("Donate");
   const [amountText, setAmountText] = useState<string>("25");
   const [receipt, setReceipt] = useState<Receipt | null>(null);
 
-  const amount = Number(amountText);
-  const valid = Number.isFinite(amount) && amount >= 1 && amount <= 1000;
+  const amount = parseDonationAmount(amountText);
 
   return (
     <>
@@ -90,12 +92,21 @@ function Donate() {
 
           {/* Payment */}
           <div className="rounded-3xl border border-line border-t-[6px] border-t-brass bg-surface p-6 shadow-xl sm:p-8">
+            {/* Always mounted so screen readers announce the result when it changes. */}
+            <p role="status" aria-live="polite" className="sr-only">
+              {receipt
+                ? `Thank you, ${receipt.name}. Your $${receipt.amount.toFixed(2)} donation was received.`
+                : ""}
+            </p>
+
             {receipt ? (
               <div className="grid justify-items-start gap-3">
                 <h2 className="font-serif text-2xl font-semibold text-ink">
                   Thank you, {receipt.name}!
                 </h2>
-                <p className="text-muted">Your ${receipt.amount.toFixed(2)} donation was received.</p>
+                <p className="text-muted">
+                  Your ${receipt.amount.toFixed(2)} donation was received.
+                </p>
                 <p className="text-xs text-muted">
                   Payment ID: <code className="break-all">{receipt.id}</code>
                 </p>
@@ -112,8 +123,8 @@ function Donate() {
                 role="alert"
                 className="rounded-xl border-l-4 border-plume bg-plume/10 p-4 font-medium text-plume"
               >
-                Stripe is not set up yet. Add VITE_STRIPE_PUBLISHABLE_KEY (starting with pk_test_) to
-                the .env file, then restart npm run dev.
+                Stripe is not set up yet. Add VITE_STRIPE_PUBLISHABLE_KEY (starting with pk_test_)
+                to the .env file, then restart npm run dev.
               </p>
             ) : (
               <>
@@ -145,7 +156,7 @@ function Donate() {
                 </div>
 
                 <label className="mt-4 grid gap-1.5 text-sm font-bold text-ink">
-                  Other amount (USD, 1 to 1000)
+                  Other amount (USD, {DONATION_MIN_USD} to {DONATION_MAX_USD})
                   <input
                     type="number"
                     min={1}
@@ -159,10 +170,7 @@ function Donate() {
 
                 <div className="mt-4">
                   <Elements stripe={stripePromise}>
-                    <CheckoutForm
-                      amount={valid ? amount : 0}
-                      onPaid={(id, name) => setReceipt({ id, name, amount })}
-                    />
+                    <CheckoutForm amount={amount ?? 0} onPaid={(paid) => setReceipt(paid)} />
                   </Elements>
                 </div>
               </>

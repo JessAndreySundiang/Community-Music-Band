@@ -8,6 +8,8 @@
 
 **Project:** Community Music Band
 **Direction:** "Golden Hour at the Bandstand"
+**Stack:** React 19 + TypeScript + Vite + **Tailwind CSS v4** (utility-first; there is no
+hand-written component CSS)
 **Approach:** Warm, accessible non-profit site. Adapted from the ui-ux-pro-max `--design-system`
 output (which suggested a generic community-purple / Minimalism system) toward the skill's
 `Music Instrument Learning` color reasoning and a serif + sans editorial pairing that better
@@ -17,59 +19,93 @@ fits a volunteer concert band.
 
 ## Global Rules
 
-### Color Palette
+### Theme mechanism
 
-Warm cream stage, deep concert navy, brass gold accent, terracotta secondary. Every pairing below
-meets WCAG AA (4.5:1) for its intended use.
+The theme is **token-driven**, not class-driven.
 
-| Role | Light | Dark | CSS Variable |
-|------|-------|------|--------------|
-| Deep concert navy | `#0D1B34` | `#0A1020` | `--ink` |
-| Navy highlight | `#16305A` | `#101A30` | `--ink-2` |
-| Supporting blue | `#2B5896` | `#2B5896` | `--blue` |
-| Brass gold (accent on dark) | `#E0A92E` | `#E9BA55` | `--brass` |
-| Brass gold (text on light) | `#8A5F12` | `#EEC56C` | `--brass-ink` |
-| Soft gold wash | `#F7E6BD` | `rgba(233,186,85,.16)` | `--brass-soft` |
-| Terracotta (accent on dark) | `#CF5138` | `#FF8570` | `--plume` |
-| Terracotta (text on light) | `#A63A22` | `#FF9A86` | `--plume-ink` |
-| Terracotta wash | `#F8E2DA` | `rgba(255,133,112,.14)` | `--plume-soft` |
-| Cream background | `#FBF7EF` | `#0A1020` | `--paper` |
-| Tinted section | `#F4ECDD` | `#101A30` | `--paper-2` |
-| Card | `#FFFFFF` | `#141F38` | `--card` |
-| Nav bar | `#0A1528` | `#060B16` | `--nav` |
-| Body text | `#1C2540` | `#E8EDF8` | `--text` |
-| Muted text | `#5D677D` | `#A4B0C8` | `--muted` |
-| Headings | `#0D1B34` | `#F3F7FF` | `--heading` |
-| Border / hairline | `rgba(13,27,52,.14)` | `rgba(232,237,248,.16)` | `--line` |
+- Every colour lives in `src/index.css` as a CSS custom property on `:root` (Daytime) or
+  `[data-theme="dark"]` (Evening).
+- `data-theme` is set on `<html>`. An inline script in `index.html` applies it before first paint
+  from `localStorage["cmb-theme"]`; the default is **dark (Evening)**.
+- **Components never branch on the theme.** They use utilities such as `bg-paper`, `text-muted`,
+  `border-line`, and the value flips by itself.
+- `@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *))` has **zero
+  specificity**. Never rely on a `dark:` utility to override a base utility of the same property —
+  add a flipping token instead.
 
-**Contrast notes:** Use `--brass-ink` / `--plume-ink` for gold/terracotta text on light surfaces
-(the bright `--brass` / `--plume` values do not reach 4.5:1 on cream). The bright values are for
-borders, fills, and text on the dark navy surfaces.
+### Colour palette
+
+All values below are the real tokens in `src/index.css`. Every pairing meets WCAG AA (4.5:1) for
+its intended use.
+
+| Role | Variable | Daytime (light) | Evening (dark) |
+|------|----------|-----------------|----------------|
+| Page background | `--paper` | `#f8f2e6` | `#080f1f` |
+| Tinted section | `--paper-2` | `#f0e6d3` | `#0e1729` |
+| Card surface | `--surface` | `#fffdf8` | `#131e37` |
+| Headings | `--ink` | `#0d1b34` | `#f3f7ff` |
+| Body text | `--body` | `#1c2540` | `#e6ecf8` |
+| Muted text | `--muted` | `#55607a` | `#a3b0c9` |
+| Hairline / border | `--line` | `rgba(13,27,52,.14)` | `rgba(232,237,248,.14)` |
+| Brass accent (text) | `--brass` | `#8a5f12` | `#e9ba55` |
+| Brass fill (buttons) | `--brass-bright` | `#c9962b` | `#e0a92e` |
+| Terracotta accent | `--plume` | `#a63a22` | `#ff8a74` |
+| Hero gradient | `--stage-grad-from/mid/to` | `#faf3e2 → #f3e7cd → #e9d4aa` | `#05080f → #0a1428 → #0e2038` |
+| On-hero text | `--stage-fg` / `--stage-muted` | navy / 70% navy | white / 70% white |
+| Gold gradient headline | `--title-from` / `--title-to` | `#8a5f12 → #c9962b` | `#fde9b8 → #fbbf24` |
+| Floating nav | `--nav` / `--nav-line` / `--nav-hover` | white 85% | navy 72% |
+| Ambient wash | `--band-a` / `--band-b` | gold / terracotta tint | transparent |
+
+**Contrast notes:**
+
+- Gold text on cream must use `--brass` (Daytime), never `--brass-bright`. The bright value is for
+  **fills** (with `text-night-950` on top) and for text on navy.
+- **Gold-on-gold rule:** the gold logo must sit on a non-gold ground. Brand badges in the navbar and
+  footer use a navy "seal" (`bg-night-950 ring-1 ring-brass/50`), which measures **7.52:1**.
+- The hero medallion flips too: ivory disc in Daytime, brass gradient in Evening.
+- Daytime deliberately keeps only a light `--band-*` wash so the page is not too bright; Evening
+  bands are flat.
 
 ### Typography
 
 - **Heading Font:** Fraunces (opsz serif) — warm, editorial, concert-program feel
 - **Body Font:** DM Sans
-- **Google Fonts:** `https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap`
+- Loaded with `<link rel="preconnect">` + a stylesheet link in `index.html` — **not** a CSS
+  `@import`, which blocks rendering.
+- Google Fonts: `https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap`
 
 ### Spacing & Shape
 
-- Section rhythm: `--section-y: clamp(3.5rem, 7vw, 6rem)`
-- Gutters: `--gutter: clamp(1.1rem, 4vw, 2rem)`
-- Radii: `--radius-sm: 11px`, `--radius: 16px`, `--radius-lg: 26px`
-- Easing: `--ease: cubic-bezier(0.22, 0.61, 0.36, 1)`; transitions 150–300ms
+Tailwind's default scale. Conventions used across the site:
+
+- Container: `mx-auto w-full max-w-6xl px-5`
+- Section rhythm: `py-16 md:py-20` (hero `py-16 lg:py-24`)
+- Card radii: `rounded-2xl` / `rounded-3xl`; pills are `rounded-full`
+- Easing: `duration-200` for colour, `duration-300` for transforms/menus
+- Micro-interactions: `hover:-translate-y-0.5` / `hover:-translate-y-1`, arrows slide with
+  `group-hover:translate-x-1`
 
 ---
 
 ## Component Specs
 
-- **Buttons (`.btn`)**: brass fill, dark text, `translateY(-2px)` hover; variants `.ghost` (on dark),
-  `.outline` (on light). Inline SVG icons at `1.15em`.
-- **Cards (`.fact`, `.program`, `.event`, `.value`, `.voice`, `.donate-list li`)**: white/`--card`
-  surface, 1px `--line` border, `--shadow-sm`, hover lifts to `--shadow-md` and brass border.
-- **Kicker (`.eyebrow`)**: pill badge for section labels; `.eyebrow--onDark` on navy surfaces.
+Everything is a typed function component with Tailwind utilities; repeated items come from typed
+arrays in `src/data/landing.ts`.
+
+- **Navbar**: sticky floating pill (`bg-nav backdrop-blur-xl`). Desktop links + Donate CTA; the CTA
+  is hidden while the visitor is already on `/donate`. The collapsed mobile panel uses `inert` +
+  `aria-hidden` so its links leave the tab order, Escape closes it, and focus returns to the toggle.
+- **Footer**: four columns (brand + socials, pages, rehearsals, contact) from `src/data/landing.ts`.
+- **PageHero**: `stage` gradient band with staff-line overlay, used by every non-home page.
+- **Cards** (`MetricCard`, `ProgramCard`, `EventCard`, `TestimonialCard`, `ProfileCard`): `bg-surface`,
+  1px `border-line`, `shadow-sm`, hover lift with a brass border. Testimonials are a uniform
+  `grid sm:grid-cols-2 lg:grid-cols-3` with `flex h-full flex-col` and `mt-auto` footers, so every
+  card's bottom edge lines up.
 - **Icons**: single inline-SVG set in `src/components/Icons.tsx` (24px grid, stroke 1.8, currentColor).
   No emoji as structural icons, no icon dependency.
+- **CheckoutForm**: Stripe `CardElement` with `hidePostalCode: true` plus our own visible, required
+  `ZIP / Postal code` field (the iframe clips Stripe's own postal box). Theme-aware Stripe styling,
+  20s request timeout, ref-based double-submit guard, and a per-attempt idempotency key.
 
 ---
 
@@ -85,11 +121,14 @@ reduced-motion safe, keyboard-friendly.
 ## Anti-Patterns (Do NOT Use)
 
 - ❌ Emojis as icons — use the shared SVG set
-- ❌ Bright gold/terracotta text on cream (use the `*-ink` tokens)
+- ❌ Bright gold (`--brass-bright`) as text on cream — use `--brass`
+- ❌ Gold logo on a gold ground
 - ❌ Layout-shifting hovers that move surrounding content
 - ❌ Text below 4.5:1 contrast
 - ❌ Instant state changes — always transition 150–300ms
 - ❌ Invisible focus states
+- ❌ Reloading a closed mobile panel's links into the tab order (`opacity-0` alone is not enough)
+- ❌ Branching components on `data-theme` instead of adding a token
 
 ---
 
@@ -97,11 +136,12 @@ reduced-motion safe, keyboard-friendly.
 
 - [x] No emojis used as icons (inline SVG set)
 - [x] Consistent icon family, stroke width, sizing
-- [x] `cursor: pointer` on clickable elements
 - [x] Hover states with 150–300ms transitions
 - [x] Light + dark mode text contrast ≥ 4.5:1
 - [x] Visible focus rings for keyboard nav (skip link included)
+- [x] Full site usable with a keyboard alone (including the mobile menu)
 - [x] `prefers-reduced-motion` respected
-- [x] Responsive: 375 / 768 / 1024 / 1440
+- [x] No horizontal overflow at 320 / 375 / 414 / 640 / 768 / 1024
 - [x] No content hidden behind the sticky navbar
-- [x] Lighthouse: Accessibility 100 · Best Practices 100 · SEO 100
+- [x] `tsc -b`, `eslint .`, `vitest run` and `vite build` all pass
+- [ ] Lighthouse audit re-run after the Tailwind rebuild

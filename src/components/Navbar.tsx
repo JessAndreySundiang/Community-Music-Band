@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 import { IconClose, IconMenu, IconMusic } from "./Icons";
 import { navItems } from "../data/landing";
@@ -10,14 +10,40 @@ const linkBase =
 
 function Navbar() {
   const [open, setOpen] = useState<boolean>(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const { pathname } = useLocation();
   const close = () => setOpen(false);
+
+  // Escape closes the mobile panel and hands focus back to the button that opened it.
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      toggleRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
+  // Collapse the panel if the layout grows past the mobile breakpoint.
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 768px)");
+    const onChange = () => {
+      if (desktop.matches) setOpen(false);
+    };
+    desktop.addEventListener("change", onChange);
+    return () => desktop.removeEventListener("change", onChange);
+  }, []);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `${linkBase} ${
-      isActive
-        ? "bg-brass-bright text-night-950"
-        : "text-muted hover:bg-nav-hover hover:text-ink"
+      isActive ? "bg-brass-bright text-night-950" : "text-muted hover:bg-nav-hover hover:text-ink"
     }`;
+
+  // The Donate page already has the form, so a second Donate call-to-action there
+  // would just link to the page the visitor is already reading.
+  const alreadyOnDonate = pathname === "/donate";
 
   return (
     <header className="sticky top-0 z-50">
@@ -51,13 +77,16 @@ function Navbar() {
 
           <div className="flex shrink-0 items-center gap-1.5">
             <ThemeToggle />
-            <NavLink
-              to="/donate"
-              className="hidden rounded-full bg-brass-bright px-4 py-2 text-sm font-bold text-night-950 shadow-lg shadow-amber-500/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-bright active:translate-y-0 sm:inline-flex"
-            >
-              Donate
-            </NavLink>
+            {!alreadyOnDonate && (
+              <NavLink
+                to="/donate"
+                className="hidden rounded-full bg-brass-bright px-4 py-2 text-sm font-bold text-night-950 shadow-lg shadow-amber-500/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-bright active:translate-y-0 sm:inline-flex"
+              >
+                Donate
+              </NavLink>
+            )}
             <button
+              ref={toggleRef}
               type="button"
               className="grid size-10 place-items-center rounded-xl text-ink transition-colors duration-200 hover:bg-nav-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-bright md:hidden"
               aria-label={open ? "Close navigation" : "Open navigation"}
@@ -70,9 +99,12 @@ function Navbar() {
           </div>
         </nav>
 
-        {/* Mobile panel */}
+        {/* Mobile panel. `inert` keeps its links out of the tab order while collapsed,
+            which `opacity-0` alone does not do. */}
         <div
           id="primary-navigation"
+          inert={!open}
+          aria-hidden={!open}
           className={`mt-2 overflow-hidden rounded-2xl border bg-nav backdrop-blur-xl transition-all duration-300 md:hidden ${
             open
               ? "max-h-80 border-nav-line opacity-100"

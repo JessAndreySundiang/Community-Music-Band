@@ -56,9 +56,7 @@ function EventCard({ event }: { event: BandEvent }) {
       >
         {attending && <IconCheck className="size-4" />}
         {attending ? "You're going" : "RSVP"}
-        <span className="rounded-full bg-ink/10 px-1.5 py-px text-xs font-semibold">
-          {going}
-        </span>
+        <span className="rounded-full bg-ink/10 px-1.5 py-px text-xs font-semibold">{going}</span>
       </button>
     </article>
   );

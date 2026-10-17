@@ -2,12 +2,23 @@ import { Link } from "react-router-dom";
 import PageHero from "../components/PageHero";
 import SectionHeading from "../components/SectionHeading";
 import ProfileCard from "../components/ProfileCard";
-import { IconCalendar, IconClock, IconHeart, IconMapPin, IconMusic, IconUsers } from "../components/Icons";
+import { usePageTitle } from "../lib/usePageTitle";
+import {
+  IconCalendar,
+  IconClock,
+  IconHeart,
+  IconMapPin,
+  IconMusic,
+  IconUsers,
+} from "../components/Icons";
 
 const timeline = [
   { year: "2012", text: "Founded in a parish hall with 14 members." },
   { year: "2016", text: "Free youth lessons and the instrument lending library begin." },
-  { year: "2020", text: "Rehearsals move outdoors, and concerts are streamed for families at home." },
+  {
+    year: "2020",
+    text: "Rehearsals move outdoors, and concerts are streamed for families at home.",
+  },
   { year: "2023", text: "The Senior Ensemble opens for adults 55 and up." },
   { year: "2026", text: "45 musicians, 250 students taught, and monthly plaza concerts." },
 ];
@@ -41,6 +52,7 @@ const joinDetails = [
 ];
 
 function About() {
+  usePageTitle("About");
   return (
     <>
       <PageHero
@@ -84,9 +96,9 @@ function About() {
             <SectionHeading eyebrow="Our story" title="About the band" />
             <div className="space-y-4 text-base leading-relaxed text-muted">
               <p>
-                Our founders were retired school band teachers and local musicians who missed playing
-                together. They opened their rehearsals to anyone who wanted to learn, and the band
-                has grown by word of mouth ever since.
+                Our founders were retired school band teachers and local musicians who missed
+                playing together. They opened their rehearsals to anyone who wanted to learn, and
+                the band has grown by word of mouth ever since.
               </p>
               <p>
                 We are registered as a non-profit and every volunteer, from conductor to librarian,
@@ -119,7 +131,9 @@ function About() {
                 <span className="mb-4 grid size-12 place-items-center rounded-2xl bg-plume/10 text-plume">
                   <Icon className="size-6" />
                 </span>
-                <h3 className="font-serif text-xl font-semibold tracking-tight text-ink">{title}</h3>
+                <h3 className="font-serif text-xl font-semibold tracking-tight text-ink">
+                  {title}
+                </h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted">{text}</p>
               </div>
             ))}

@@ -1,25 +1,15 @@
 import { Link } from "react-router-dom";
-import {
-  IconClock,
-  IconFacebook,
-  IconInstagram,
-  IconMapPin,
-  IconPhone,
-  IconYouTube,
-} from "./Icons";
-import { navItems } from "../data/landing";
+import { IconClock, IconMapPin, IconPhone } from "./Icons";
+import { contact, legalLinks, navItems, socials } from "../data/landing";
 import logo from "../assets/logo.svg";
-
-const socials = [
-  { label: "Facebook", href: "https://facebook.com", Icon: IconFacebook },
-  { label: "Instagram", href: "https://instagram.com", Icon: IconInstagram },
-  { label: "YouTube", href: "https://youtube.com", Icon: IconYouTube },
-];
 
 const rehearsal = [
   { Icon: IconClock, text: "Saturdays, 9:00 AM to 12:00 NN" },
   { Icon: IconMapPin, text: "Community Center, Main Hall" },
 ];
+
+const linkFocus =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-bright";
 
 function Footer() {
   return (
@@ -40,14 +30,14 @@ function Footer() {
               A volunteer, non-profit band teaching and performing free music for our community.
             </p>
             <ul className="flex items-center gap-2">
-              {socials.map(({ label, href, Icon }) => (
+              {socials.map(({ label, href, icon: Icon }) => (
                 <li key={label}>
                   <a
                     href={href}
                     target="_blank"
                     rel="noreferrer"
                     aria-label={`Community Music Band on ${label}`}
-                    className="grid size-10 place-items-center rounded-full border border-line text-muted transition-all duration-200 hover:-translate-y-0.5 hover:border-brass hover:text-brass focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-bright"
+                    className={`grid size-10 place-items-center rounded-full border border-line text-muted transition-all duration-200 hover:-translate-y-0.5 hover:border-brass hover:text-brass ${linkFocus}`}
                   >
                     <Icon className="size-5" />
                   </a>
@@ -64,7 +54,7 @@ function Footer() {
                 <li key={item.to}>
                   <Link
                     to={item.to}
-                    className="text-muted transition-colors duration-200 hover:text-brass focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-bright"
+                    className={`text-muted transition-colors duration-200 hover:text-brass ${linkFocus}`}
                   >
                     {item.label}
                   </Link>
@@ -92,16 +82,14 @@ function Footer() {
             <ul className="space-y-3 text-sm">
               <li>
                 <a
-                  href="tel:09943295457"
-                  className="flex items-center gap-2.5 text-muted transition-colors duration-200 hover:text-brass focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-bright"
+                  href={contact.phoneHref}
+                  className={`flex items-center gap-2.5 text-muted transition-colors duration-200 hover:text-brass ${linkFocus}`}
                 >
                   <IconPhone className="size-4.5 shrink-0 text-brass" />
-                  0994-329-5457
+                  {contact.phoneLabel}
                 </a>
               </li>
-              <li className="text-muted">
-                Pandacaqui, Mexico, Pampanga, Philippines
-              </li>
+              <li className="text-muted">{contact.address}</li>
             </ul>
           </div>
         </div>
@@ -109,21 +97,16 @@ function Footer() {
         <div className="mt-12 flex flex-col gap-3 border-t border-line pt-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
           <p>© 2026 Community Music Band Organization. A non-profit organization.</p>
           <ul className="flex items-center gap-5">
-            <li>
-              <a href="#" className="transition-colors duration-200 hover:text-brass">
-                Privacy
-              </a>
-            </li>
-            <li>
-              <a href="#" className="transition-colors duration-200 hover:text-brass">
-                Terms
-              </a>
-            </li>
-            <li>
-              <a href="#" className="transition-colors duration-200 hover:text-brass">
-                Accessibility
-              </a>
-            </li>
+            {legalLinks.map((item) => (
+              <li key={item.to}>
+                <Link
+                  to={item.to}
+                  className={`transition-colors duration-200 hover:text-brass ${linkFocus}`}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
       </div>
