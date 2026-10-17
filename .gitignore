@@ -32,3 +32,7 @@ server/node_modules
 
 # Donation ledger written by the Stripe webhook (contains donor details)
 server/data
+
+# Local OpenCode tooling (agent skills and their data files). Not part of the
+# band project — kept on disk, deliberately not published.
+.opencode
