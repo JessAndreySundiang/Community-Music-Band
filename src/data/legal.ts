@@ -4,7 +4,7 @@ import { contact } from "./landing";
  * Plain-language policy pages. Written to describe what this site actually
  * does — update them if the donation flow or the data we keep ever changes.
  */
-export type LegalDoc = {
+type LegalDoc = {
   slug: string;
   eyebrow: string;
   title: string;

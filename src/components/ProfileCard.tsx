@@ -7,6 +7,8 @@ type ProfileCardProps = {
   course: string;
   address: string;
   phone: string;
+  /** A ready-made `tel:` link, so the number dials from outside the country too. */
+  phoneHref: string;
   instrument: string;
 };
 
@@ -18,7 +20,16 @@ const photos = import.meta.glob("../assets/profile.{jpg,jpeg,png,webp}", {
 }) as Record<string, string>;
 const photo: string | undefined = Object.values(photos)[0];
 
-function ProfileCard({ name, age, school, course, address, phone, instrument }: ProfileCardProps) {
+function ProfileCard({
+  name,
+  age,
+  school,
+  course,
+  address,
+  phone,
+  phoneHref,
+  instrument,
+}: ProfileCardProps) {
   const parts = name.split(" ");
   const initials = parts[0][0] + parts[parts.length - 1][0];
   const rows: { label: string; value: string }[] = [
@@ -72,7 +83,7 @@ function ProfileCard({ name, age, school, course, address, phone, instrument }: 
         </dl>
 
         <a
-          href={`tel:${phone.replace(/-/g, "")}`}
+          href={phoneHref}
           className="mt-8 inline-flex items-center gap-2 rounded-full bg-brass-bright px-6 py-3.5 font-bold text-night-950 shadow-lg shadow-amber-500/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-bright active:translate-y-0"
         >
           <IconPhone className="size-5" />

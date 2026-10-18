@@ -3,7 +3,13 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import Stripe from "stripe";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DONATION_CURRENCY, createApp, createRateLimiter, parseAmountToCents } from "./app.js";
+import {
+  DONATION_CURRENCY,
+  createApp,
+  createRateLimiter,
+  describeStripeKey,
+  parseAmountToCents,
+} from "./app.js";
 import { createAlertQueue } from "./alert-queue.js";
 import { createDonationStore } from "./donations.js";
 import { buildDonationAlert, createMailer, createMailerFromEnv } from "./mailer.js";
@@ -73,6 +79,20 @@ describe("parseAmountToCents", () => {
   );
 });
 
+describe("describeStripeKey", () => {
+  it("accepts both a test and a live key, so go-live cannot stop the server", () => {
+    expect(describeStripeKey("sk_test_123")).toMatchObject({ ok: true, live: false });
+    expect(describeStripeKey("sk_live_123")).toMatchObject({ ok: true, live: true });
+  });
+
+  it.each([undefined, "", "pk_test_123", "whsec_123", "sk_123", "sk_test"])("refuses %o", (key) => {
+    const result = describeStripeKey(key);
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain("STRIPE_SECRET_KEY");
+  });
+});
+
 describe("createRateLimiter", () => {
   it("allows requests up to the limit, then answers 429 with Retry-After", () => {
     const limiter = createRateLimiter({ limit: 2, windowMs: 60_000 });
@@ -100,6 +120,29 @@ describe("createRateLimiter", () => {
     expect(next).toHaveBeenCalledTimes(2);
     expect(res.code).toBe(429);
     expect(headers["Retry-After"]).toBeDefined();
+  });
+
+  it("forgets addresses whose window has passed, so the map cannot grow forever", async () => {
+    const limiter = createRateLimiter({ limit: 5, windowMs: 25 });
+    const res = {
+      setHeader() {},
+      status(code) {
+        this.code = code;
+        return this;
+      },
+      json() {
+        return this;
+      },
+    };
+    const next = vi.fn();
+
+    for (const ip of ["10.0.0.1", "10.0.0.2", "10.0.0.3"]) limiter({ ip }, res, next);
+    expect(limiter.trackedAddresses()).toBe(3);
+
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    limiter({ ip: "10.0.0.4" }, res, next);
+
+    expect(limiter.trackedAddresses()).toBe(1);
   });
 });
 
@@ -702,6 +745,21 @@ describe("createMailer", () => {
         from: "Community Music Band <band@gmail.com>",
         to: "band@gmail.com",
       }),
+    );
+  });
+
+  it("still sends when no transport names a From address", async () => {
+    const fallbackTransport = { sendMail: vi.fn(async () => ({})) };
+    const mailer = createMailer({
+      fallbackTransport,
+      notifyTo: "band@gmail.com",
+      logger: silentLogger,
+    });
+
+    await mailer.sendDonationAlert(alert);
+
+    expect(fallbackTransport.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ from: expect.stringContaining("<"), to: "band@gmail.com" }),
     );
   });
 

@@ -134,10 +134,6 @@
 
   /* Fixed "stage" colors — always the deep concert navy, in both themes. */
   --color-night-950: #05080f;
-  --color-night-900: #080f1f;
-  --color-night-800: #0e1729;
-  --color-night-700: #16233f;
-  --color-night-600: #22355c;
 
   --animate-float: float 9s ease-in-out infinite;
   --animate-float-slow: float 15s ease-in-out infinite;
@@ -145,7 +141,6 @@
   --animate-drift: drift 20s ease-in-out infinite;
   --animate-spin-slow: spinSlow 48s linear infinite;
   --animate-draw: drawLine 2.6s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
-  --animate-draw-slow: drawLine 3.6s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
 }
 
 @theme inline {
@@ -153,7 +148,6 @@
   --color-paper-2: var(--paper-2);
   --color-surface: var(--surface);
   --color-ink: var(--ink);
-  --color-body: var(--body);
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-brass: var(--brass);

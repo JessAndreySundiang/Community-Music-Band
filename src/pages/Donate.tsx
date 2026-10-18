@@ -5,7 +5,12 @@ import PageHero from "../components/PageHero";
 import SectionHeading from "../components/SectionHeading";
 import { IconCap, IconMusic, IconTicket } from "../components/Icons";
 import { stripePromise, hasStripeKey } from "../lib/stripe";
-import { DONATION_MAX_USD, DONATION_MIN_USD, parseDonationAmount } from "../lib/donation";
+import {
+  DONATION_MAX_USD,
+  DONATION_MIN_USD,
+  formatUsd,
+  parseDonationAmount,
+} from "../lib/donation";
 import { usePageTitle } from "../lib/usePageTitle";
 
 type Receipt = {
@@ -95,7 +100,7 @@ function Donate() {
             {/* Always mounted so screen readers announce the result when it changes. */}
             <p role="status" aria-live="polite" className="sr-only">
               {receipt
-                ? `Thank you, ${receipt.name}. Your $${receipt.amount.toFixed(2)} donation was received.`
+                ? `Thank you, ${receipt.name}. Your ${formatUsd(receipt.amount)} donation was received.`
                 : ""}
             </p>
 
@@ -105,7 +110,7 @@ function Donate() {
                   Thank you, {receipt.name}!
                 </h2>
                 <p className="text-muted">
-                  Your ${receipt.amount.toFixed(2)} donation was received.
+                  Your {formatUsd(receipt.amount)} donation was received.
                 </p>
                 <p className="text-xs text-muted">
                   Payment ID: <code className="break-all">{receipt.id}</code>
@@ -123,7 +128,7 @@ function Donate() {
                 role="alert"
                 className="rounded-xl border-l-4 border-plume bg-plume/10 p-4 font-medium text-plume"
               >
-                Stripe is not set up yet. Add VITE_STRIPE_PUBLISHABLE_KEY (starting with pk_test_)
+                Stripe is not set up yet. Add VITE_STRIPE_PUBLISHABLE_KEY (pk_test_… or pk_live_…)
                 to the .env file, then restart npm run dev.
               </p>
             ) : (
@@ -159,8 +164,8 @@ function Donate() {
                   Other amount (USD, {DONATION_MIN_USD} to {DONATION_MAX_USD})
                   <input
                     type="number"
-                    min={1}
-                    max={1000}
+                    min={DONATION_MIN_USD}
+                    max={DONATION_MAX_USD}
                     step={1}
                     value={amountText}
                     onChange={(e) => setAmountText(e.target.value)}

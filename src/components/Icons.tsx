@@ -168,23 +168,6 @@ export function IconMoon(props: IconProps) {
   );
 }
 
-export function IconArrowUpRight(props: IconProps) {
-  return (
-    <Base {...props}>
-      <path d="M7 17 17 7M9 7h8v8" />
-    </Base>
-  );
-}
-
-export function IconMail(props: IconProps) {
-  return (
-    <Base {...props}>
-      <rect x="3" y="5" width="18" height="14" rx="2.5" />
-      <path d="m4 7 8 6 8-6" />
-    </Base>
-  );
-}
-
 export function IconFacebook(props: IconProps) {
   return (
     <Base {...props}>

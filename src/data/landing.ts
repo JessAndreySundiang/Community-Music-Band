@@ -11,12 +11,12 @@ import {
 } from "../components/Icons";
 
 /** Every icon in the shared set shares this signature. */
-export type IconType = ComponentType<SVGProps<SVGSVGElement>>;
+type IconType = ComponentType<SVGProps<SVGSVGElement>>;
 
 /* ------------------------------------------------------------------ */
 /* Navigation                                                          */
 /* ------------------------------------------------------------------ */
-export type NavItem = { label: string; to: string; end?: boolean };
+type NavItem = { label: string; to: string; end?: boolean };
 
 export const navItems: NavItem[] = [
   { label: "Home", to: "/", end: true },
@@ -46,44 +46,37 @@ export const metrics: Metric[] = [
 /* ------------------------------------------------------------------ */
 export type BandEvent = {
   id: string;
-  month: string;
-  day: string;
+  /** ISO date, `YYYY-MM-DD`. The card and the "next concert" chip both read it. */
+  date: string;
   name: string;
   place: string;
   time: string;
-  going: number;
   instruments: string[];
 };
 
 export const events: BandEvent[] = [
   {
     id: "autumn-plaza",
-    month: "Nov",
-    day: "08",
+    date: "2026-11-08",
     name: "Autumn Plaza Concert",
     place: "Town Plaza",
     time: "4:00 PM",
-    going: 38,
     instruments: ["Trumpet", "Clarinet"],
   },
   {
     id: "carols-brass",
-    month: "Dec",
-    day: "13",
+    date: "2026-12-13",
     name: "Carols and Brass",
     place: "Parish Hall",
     time: "6:00 PM",
-    going: 52,
     instruments: ["Horn", "Trombone"],
   },
   {
     id: "open-rehearsal",
-    month: "Jan",
-    day: "16",
+    date: "2027-01-16",
     name: "Open Rehearsal & Sign-ups",
     place: "Community Center",
     time: "9:00 AM",
-    going: 21,
     instruments: ["Flute", "Percussion"],
   },
 ];
@@ -103,7 +96,7 @@ export const testimonials: Testimonial[] = [
   {
     id: "marites",
     quote:
-      "My daughter had never touched an instrument. Two years later she is playing clarinet in the plaza concert — and it has never cost us a peso.",
+      "My daughter had never touched an instrument. Two years later she is playing clarinet in the plaza concert — and it has never cost us a cent.",
     name: "Marites R.",
     role: "Parent of a youth student",
     initials: "MR",
@@ -188,7 +181,7 @@ export const programs: Program[] = [
 /* ------------------------------------------------------------------ */
 /* Footer                                                              */
 /* ------------------------------------------------------------------ */
-export type SocialLink = { label: string; href: string; icon: IconType };
+type SocialLink = { label: string; href: string; icon: IconType };
 
 /**
  * TODO: swap these for the band's own profile URLs. They currently point at
@@ -201,7 +194,7 @@ export const socials: SocialLink[] = [
   { label: "YouTube", href: "https://youtube.com", icon: IconYouTube },
 ];
 
-export type LegalLink = { label: string; to: string };
+type LegalLink = { label: string; to: string };
 
 export const legalLinks: LegalLink[] = [
   { label: "Privacy", to: "/privacy" },

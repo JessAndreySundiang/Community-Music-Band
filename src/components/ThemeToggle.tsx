@@ -1,29 +1,13 @@
 import { useEffect, useState } from "react";
 import { IconMoon, IconSun } from "./Icons";
-
-/** Dark-first: falls back to the Evening theme when nothing is stored. */
-function getInitialTheme(): boolean {
-  if (typeof window === "undefined") return true;
-  try {
-    const saved = window.localStorage.getItem("cmb-theme");
-    if (saved === "dark") return true;
-    if (saved === "light") return false;
-  } catch {
-    /* storage may be unavailable */
-  }
-  return true;
-}
+import { applyTheme, storedTheme } from "../lib/theme";
 
 function ThemeToggle() {
-  const [dark, setDark] = useState<boolean>(getInitialTheme);
+  // Dark-first: storedTheme() falls back to the Evening theme.
+  const [dark, setDark] = useState<boolean>(() => storedTheme() === "dark");
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-    try {
-      window.localStorage.setItem("cmb-theme", dark ? "dark" : "light");
-    } catch {
-      /* ignore */
-    }
+    applyTheme(dark ? "dark" : "light");
   }, [dark]);
 
   const label = dark ? "Switch to Daytime theme" : "Switch to Evening theme";

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import PageHero from "../components/PageHero";
 import SectionHeading from "../components/SectionHeading";
 import ProfileCard from "../components/ProfileCard";
+import { contact } from "../data/landing";
 import { usePageTitle } from "../lib/usePageTitle";
 import {
   IconCalendar,
@@ -39,7 +40,7 @@ const values = [
   {
     id: "give",
     title: "Give back",
-    text: "Every concert is free, and every peso donated goes to instruments, music, and rehearsal space.",
+    text: "Every concert is free, and every dollar donated goes to instruments, music, and rehearsal space.",
     Icon: IconHeart,
   },
 ];
@@ -83,8 +84,9 @@ function About() {
             age={20}
             course="3rd Year BSIT"
             school="Angeles University Foundation"
-            address="Pandacaqui, Mexico, Pampanga"
-            phone="0994-329-5457"
+            address={contact.address}
+            phone={contact.phoneLabel}
+            phoneHref={contact.phoneHref}
             instrument="Flute / Piccolo"
           />
         </div>
@@ -160,10 +162,10 @@ function About() {
             ))}
           </dl>
           <a
-            href="tel:09943295457"
+            href={contact.phoneHref}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-brass-bright px-6 py-3.5 font-bold text-night-950 shadow-lg shadow-amber-500/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-bright active:translate-y-0"
           >
-            Call 0994-329-5457
+            Call {contact.phoneLabel}
           </a>
         </div>
       </section>

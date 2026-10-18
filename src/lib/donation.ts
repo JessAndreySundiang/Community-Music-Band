@@ -20,6 +20,23 @@ export function formatUsd(value: number): string {
 }
 
 /**
+ * Explains a failure from the request to our own donation API. Used only at
+ * that point, so a TypeError here really is an unreachable server or a blocked
+ * request rather than a bug further along the checkout — which is why the rest
+ * of the checkout reports its own errors instead of borrowing this wording.
+ */
+export function describeApiError(err: unknown, apiLabel: string): string {
+  if (err instanceof DOMException && err.name === "TimeoutError") {
+    return `The donation server at ${apiLabel} did not respond in time. Please try again.`;
+  }
+  if (err instanceof TypeError) {
+    return `Cannot reach the donation server at ${apiLabel}. Make sure it is running.`;
+  }
+  if (err instanceof Error && err.message) return err.message;
+  return "Something went wrong.";
+}
+
+/**
  * A unique key for one donation attempt. Stripe returns the original
  * PaymentIntent when it sees the same key again, so a client retry after a
  * timeout cannot charge the donor twice.

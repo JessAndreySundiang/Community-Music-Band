@@ -6,7 +6,7 @@ import path from "node:path";
  * left behind by a misconfiguration keeps retrying slowly until it is fixed
  * rather than giving up on somebody's gift.
  */
-export const RETRY_DELAYS_MS = [60_000, 300_000, 900_000, 3_600_000, 21_600_000];
+const RETRY_DELAYS_MS = [60_000, 300_000, 900_000, 3_600_000, 21_600_000];
 
 /**
  * Durable retry queue for donation alerts.

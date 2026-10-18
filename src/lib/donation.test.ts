@@ -3,6 +3,7 @@ import {
   DONATION_MAX_USD,
   DONATION_MIN_USD,
   createIdempotencyKey,
+  describeApiError,
   formatUsd,
   parseDonationAmount,
 } from "./donation";
@@ -45,5 +46,31 @@ describe("createIdempotencyKey", () => {
 
     expect(keys.size).toBe(50);
     for (const key of keys) expect(key.length).toBeGreaterThan(7);
+  });
+});
+
+describe("describeApiError", () => {
+  it("names a stalled server for what it is", () => {
+    const timedOut = new DOMException("The operation timed out.", "TimeoutError");
+
+    expect(describeApiError(timedOut, "localhost:4242")).toContain("did not respond in time");
+  });
+
+  it("blames the network only for an actual network failure", () => {
+    expect(describeApiError(new TypeError("Failed to fetch"), "localhost:4242")).toContain(
+      "Cannot reach the donation server at localhost:4242",
+    );
+  });
+
+  it("passes the API's own message through", () => {
+    const rejection = new Error("Donation must be between $1 and $1000.");
+
+    expect(describeApiError(rejection, "localhost:4242")).toBe(
+      "Donation must be between $1 and $1000.",
+    );
+  });
+
+  it("falls back to something plain for anything that is not an error", () => {
+    expect(describeApiError("nonsense", "localhost:4242")).toBe("Something went wrong.");
   });
 });

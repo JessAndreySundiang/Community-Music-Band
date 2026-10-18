@@ -4,7 +4,6 @@
   "description": "Stripe donation API for the Community Music Band site",
   "private": true,
   "type": "module",
-  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "check-mail": "node check-mail.mjs"

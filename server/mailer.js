@@ -33,8 +33,15 @@ export function buildDonationAlert(entry, { testMode = false, from, to } = {}) {
   };
 }
 
+/**
+ * A transport can legitimately end up with no From address: a test's fallback
+ * transport, or a relay-only setup that names no sender at all. Mail needs one,
+ * so fall back to a description that cannot be mistaken for a real address
+ * rather than throwing on `undefined`.
+ */
 function formatFrom(address) {
-  return address.includes("<") ? address : `Community Music Band <${address}>`;
+  const value = address?.trim() || "no-reply@localhost";
+  return value.includes("<") ? value : `Community Music Band <${value}>`;
 }
 
 function createGmailTransport({ user, appPassword }) {

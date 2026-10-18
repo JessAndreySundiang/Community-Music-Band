@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import type { StripeCardElementOptions } from "@stripe/stripe-js";
 import { API_LABEL, API_URL } from "../lib/stripe";
-import { createIdempotencyKey, formatUsd } from "../lib/donation";
+import { createIdempotencyKey, describeApiError, formatUsd } from "../lib/donation";
+import { currentTheme, type Theme } from "../lib/theme";
 
 type CheckoutFormProps = {
   amount: number;
@@ -14,16 +15,12 @@ const fieldClass =
   "rounded-xl border border-line bg-paper px-3.5 py-3 text-base font-normal text-ink transition-colors duration-200 focus:border-brass focus:outline-none";
 
 /** Keep the Stripe iframe's text legible against the active theme. */
-function useResolvedTheme(): "light" | "dark" {
-  const [theme, setTheme] = useState<"light" | "dark">(
-    () => (document.documentElement.getAttribute("data-theme") as "light" | "dark") ?? "dark",
-  );
+function useResolvedTheme(): Theme {
+  const [theme, setTheme] = useState<Theme>(currentTheme);
 
   useEffect(() => {
     const el = document.documentElement;
-    const observer = new MutationObserver(() =>
-      setTheme((el.getAttribute("data-theme") as "light" | "dark") ?? "dark"),
-    );
+    const observer = new MutationObserver(() => setTheme(currentTheme()));
     observer.observe(el, { attributes: true, attributeFilter: ["data-theme"] });
     return () => observer.disconnect();
   }, []);
@@ -86,6 +83,11 @@ function CheckoutForm({ amount, onPaid }: CheckoutFormProps) {
       idempotencyRef.current = { fingerprint, key: createIdempotencyKey() };
     }
 
+    // The two stages are told apart so that only a failure of the request below
+    // is described as a network problem. Once Stripe is talking to the donor,
+    // its own message is the honest one.
+    let stage: "request" | "payment" = "request";
+
     try {
       const res = await fetch(`${API_URL}/create-payment-intent`, {
         method: "POST",
@@ -94,8 +96,10 @@ function CheckoutForm({ amount, onPaid }: CheckoutFormProps) {
           "Idempotency-Key": idempotencyRef.current.key,
         },
         body: JSON.stringify({ amount, name, email }),
-        // Without a timeout a stalled server leaves the button on "Processing..." forever.
-        signal: AbortSignal.timeout(20_000),
+        // Without a timeout a stalled server leaves the button on "Processing..."
+        // forever. Browsers without AbortSignal.timeout get no timeout rather
+        // than a fabricated "Cannot reach the server" message.
+        signal: globalThis.AbortSignal?.timeout?.(20_000),
       });
 
       // The API always answers with JSON, but a crash or proxy can return HTML.
@@ -110,6 +114,7 @@ function CheckoutForm({ amount, onPaid }: CheckoutFormProps) {
         );
       }
 
+      stage = "payment";
       const result = await stripe.confirmCardPayment(data.clientSecret, {
         payment_method: {
           card,
@@ -136,13 +141,13 @@ function CheckoutForm({ amount, onPaid }: CheckoutFormProps) {
         setError(`Payment status: ${result.paymentIntent.status}`);
       }
     } catch (err) {
-      if (err instanceof DOMException && err.name === "TimeoutError") {
-        setError(`The donation server at ${API_LABEL} did not respond in time. Please try again.`);
-      } else if (err instanceof TypeError) {
-        setError(`Cannot reach the donation server at ${API_LABEL}. Make sure it is running.`);
-      } else {
-        setError(err instanceof Error ? err.message : "Something went wrong.");
-      }
+      setError(
+        stage === "request"
+          ? describeApiError(err, API_LABEL)
+          : err instanceof Error && err.message
+            ? err.message
+            : "The payment could not be completed.",
+      );
     } finally {
       submittingRef.current = false;
       setProcessing(false);

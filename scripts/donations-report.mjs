@@ -37,22 +37,34 @@ for (const line of text.split("\n")) {
 
 const amountOf = (entry) =>
   Number.isFinite(Number(entry.amountUsd)) ? Number(entry.amountUsd) : 0;
-const total = entries.reduce((sum, entry) => sum + amountOf(entry), 0);
 
+// Totalled per currency rather than in whichever currency happened to be on the
+// first line, so a mixed ledger shows two figures instead of one wrong one.
+const byCurrency = new Map();
 const byDonor = new Map();
 for (const entry of entries) {
+  const currency = String(entry.currency ?? "usd").toUpperCase();
+  byCurrency.set(currency, (byCurrency.get(currency) ?? 0) + amountOf(entry));
+
+  // Grouped case-insensitively: Gmail treats Communitymusicband@ and
+  // CommunityMusicBand@ as the same inbox, so one donor typing it twice is one
+  // donor. The ledger itself keeps what was written; only this report merges.
   const who = entry.email || entry.donorName || "Unknown";
-  byDonor.set(who, (byDonor.get(who) ?? 0) + amountOf(entry));
+  const donorKey = who.toLowerCase();
+  const donor = byDonor.get(donorKey);
+  byDonor.set(donorKey, {
+    who: donor?.who ?? who,
+    amount: (donor?.amount ?? 0) + amountOf(entry),
+  });
 }
 
-console.log(
-  `${entries.length} donation(s) totalling $${total.toFixed(2)} ${entries[0]?.currency ?? "usd"}`,
-);
+const totals = [...byCurrency].map(([currency, amount]) => `$${amount.toFixed(2)} ${currency}`);
+console.log(`${entries.length} donation(s) totalling ${totals.join(" + ")}`);
 console.log(`Ledger: ${file}\n`);
 
 if (byDonor.size > 0) {
   console.log("By donor:");
-  for (const [who, amount] of [...byDonor].sort((a, b) => b[1] - a[1])) {
+  for (const { who, amount } of [...byDonor.values()].sort((a, b) => b.amount - a.amount)) {
     console.log(`  $${amount.toFixed(2)}  ${who}`);
   }
   console.log("\nMost recent:");

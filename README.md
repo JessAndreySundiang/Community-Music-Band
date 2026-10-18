@@ -44,12 +44,13 @@ push and pull request.
 
 | Variable | File | Purpose |
 | --- | --- | --- |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | `.env` | Stripe publishable key (`pk_test_...`) used by the browser |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | `.env` | Stripe publishable key (`pk_test_...` or `pk_live_...`) used by the browser |
 | `VITE_API_URL` | `.env` | Optional. Donation API base URL. Defaults to `http://localhost:4242` |
-| `STRIPE_SECRET_KEY` | `server/.env` | Stripe secret key (`sk_test_...`) used by the API — never expose this one |
+| `STRIPE_SECRET_KEY` | `server/.env` | Stripe secret key (`sk_test_...` or `sk_live_...`) used by the API — never expose this one |
 | `STRIPE_WEBHOOK_SECRET` | `server/.env` | Optional. Signing secret for `/stripe-webhook`. Without it the API still takes donations, it just cannot record them |
 | `PORT` | `server/.env` | Optional. API port. Defaults to `4242` |
 | `CORS_ORIGINS` | `server/.env` | Optional. Extra comma-separated origins allowed to call the API |
+| `TRUST_PROXY` | `server/.env` | Optional. How many proxy hops to believe, e.g. `1` behind nginx. Without it the API only ever sees the proxy's address, so every donor shares one rate-limit bucket |
 | `DONATIONS_FILE` | `server/.env` | Optional. Where the donation ledger is written. Defaults to `server/data/donations.jsonl` |
 | `GMAIL_USER` | `server/.env` | Optional. Google account that sends the donation alerts |
 | `GMAIL_APP_PASSWORD` | `server/.env` | Optional. 16-character App Password for that account. Requires 2-Step Verification |
@@ -217,7 +218,11 @@ design-system/  the design system the UI follows
 - Build with `npm run build` and serve `dist/`. Because this is a single-page app, configure your
   host to fall back to `index.html` for unknown paths, or refresh on `/about` will 404.
 - Set `CORS_ORIGINS` to your live origin and use **live** Stripe keys (`pk_live_`/`sk_live_`).
-  Stripe requires HTTPS for live payments.
+  Stripe requires HTTPS for live payments. Both key kinds are accepted: with a live key the API
+  prints a warning instead of refusing to start, and alert subjects lose their `[TEST]` prefix.
+- **Set `TRUST_PROXY` if anything sits in front of the API.** Behind nginx, Apache or a platform
+  router, `req.ip` is the proxy's address, so the donation rate limit would count every donor as
+  one client and one busy visitor could throttle everybody. `TRUST_PROXY=1` means one hop.
 - **Donation alerts** need a real webhook endpoint in the Stripe dashboard instead of
   `stripe listen`. Keep `GMAIL_APP_PASSWORD` out of the repo: GitHub's push protection does not
   recognise a 16-character Google App Password, so `.gitignore` is the only thing keeping it out.

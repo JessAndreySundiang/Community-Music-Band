@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import Stripe from "stripe";
 import { createAlertQueue } from "./alert-queue.js";
-import { createApp } from "./app.js";
+import { createApp, describeStripeKey } from "./app.js";
 import { createDonationStore } from "./donations.js";
 import { createMailerFromEnv } from "./mailer.js";
 
@@ -17,14 +17,18 @@ const envFile = path.join(here, ".env");
 dotenv.config({ path: envFile });
 
 const secretKey = process.env.STRIPE_SECRET_KEY;
+const secretKeyStatus = describeStripeKey(secretKey);
 
-if (!secretKey || !secretKey.startsWith("sk_test_")) {
-  console.error(
-    `Missing or invalid STRIPE_SECRET_KEY in ${envFile} (it must start with sk_test_).`,
-  );
-  console.error("Copy server/.env.example to server/.env and paste a test key from");
-  console.error("https://dashboard.stripe.com/test/apikeys, then restart the server.");
+if (!secretKeyStatus.ok) {
+  console.error(`${secretKeyStatus.message} (in ${envFile}).`);
+  console.error("Copy server/.env.example to server/.env and paste a key from");
+  console.error("https://dashboard.stripe.com/apikeys, then restart the server.");
   process.exit(1);
+}
+
+if (secretKeyStatus.live) {
+  console.warn("STRIPE_SECRET_KEY is a LIVE key: completed donations charge real cards.");
+  console.warn("Donation alerts are no longer prefixed [TEST].");
 }
 
 const store = createDonationStore({

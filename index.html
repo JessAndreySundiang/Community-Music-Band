@@ -79,6 +79,8 @@
 
     <script>
       // Resolve the theme before first paint to avoid a flash.
+      // The storage key and the "dark" default are duplicated from
+      // src/lib/theme.ts, which cannot be imported this early — keep them in step.
       (function () {
         try {
           var t = window.localStorage.getItem("cmb-theme");

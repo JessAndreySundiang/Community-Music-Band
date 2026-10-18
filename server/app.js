@@ -5,7 +5,28 @@ import cors from "cors";
 export const DONATION_MIN_USD = 1;
 export const DONATION_MAX_USD = 1000;
 export const DONATION_CURRENCY = "usd";
-export const DONATION_DESCRIPTION = "Donation to Community Music Band Organization";
+
+/** Shown beside the charge in the donor's bank statement. */
+const DONATION_DESCRIPTION = "Donation to Community Music Band Organization";
+
+/**
+ * Describes a Stripe secret key, so the server can refuse a malformed one and
+ * shout about a live one.
+ *
+ * Test and live keys are both valid: treating live keys as "not configured"
+ * would stop the API — and switch the donate page off with a false "Stripe is
+ * not set up yet" — on the very day the band starts taking real gifts.
+ */
+export function describeStripeKey(key) {
+  if (!key) return { ok: false, live: false, message: "STRIPE_SECRET_KEY is not set" };
+  if (key.startsWith("sk_live_")) return { ok: true, live: true };
+  if (key.startsWith("sk_test_")) return { ok: true, live: false };
+  return {
+    ok: false,
+    live: false,
+    message: "STRIPE_SECRET_KEY must start with sk_test_ or sk_live_",
+  };
+}
 
 /**
  * Vite falls back to the next free port when 5173 is busy (5173 -> 5174 -> ...),
@@ -34,10 +55,25 @@ export function parseAmountToCents(value) {
  */
 export function createRateLimiter({ limit = 30, windowMs = 60_000 } = {}) {
   const hits = new Map();
+  let lastSweep = Date.now();
 
-  return function rateLimit(req, res, next) {
+  /**
+   * Forgets addresses whose window has passed. Without this the map is one
+   * entry per address seen since the process started, for as long as it runs.
+   */
+  function sweep(now) {
+    if (now - lastSweep < windowMs) return;
+    lastSweep = now;
+    for (const [key, entry] of hits) {
+      if (now - entry.start >= windowMs) hits.delete(key);
+    }
+  }
+
+  function rateLimit(req, res, next) {
     const key = req.ip ?? "unknown";
     const now = Date.now();
+    sweep(now);
+
     const entry = hits.get(key);
 
     if (!entry || now - entry.start >= windowMs) {
@@ -54,7 +90,12 @@ export function createRateLimiter({ limit = 30, windowMs = 60_000 } = {}) {
     }
 
     return next();
-  };
+  }
+
+  /** How many addresses are being counted, so a test can prove the map is pruned. */
+  rateLimit.trackedAddresses = () => hits.size;
+
+  return rateLimit;
 }
 
 /** Verifies and stores a Stripe webhook event. */
@@ -140,6 +181,13 @@ export function createApp({
 
   const app = express();
   app.disable("x-powered-by");
+
+  // Behind a reverse proxy, req.ip is the proxy's address unless Express is told
+  // how many hops it may believe in X-Forwarded-For — and then the rate limiter
+  // counts every donor as one client, so one busy visitor throttles everyone.
+  // TRUST_PROXY=1 means "one proxy sits in front of me".
+  const trustProxy = Number(process.env.TRUST_PROXY);
+  if (Number.isInteger(trustProxy) && trustProxy > 0) app.set("trust proxy", trustProxy);
 
   app.use(
     cors({

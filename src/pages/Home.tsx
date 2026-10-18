@@ -7,6 +7,7 @@ import EventCard from "../components/EventCard";
 import TestimonialCard from "../components/TestimonialCard";
 import { IconArrowRight, IconHeart, IconSparkle, IconTicket, IconCheck } from "../components/Icons";
 import { events, metrics, programs, testimonials } from "../data/landing";
+import { eventDateParts, nextUpcomingEvent } from "../lib/events";
 import { usePageTitle } from "../lib/usePageTitle";
 import logo from "../assets/logo.svg";
 
@@ -17,7 +18,10 @@ const btnFocus =
 
 function Home() {
   usePageTitle("");
-  const nextEvent = events[0];
+  // The soonest event still to come, or nothing at all once the announced
+  // dates have passed — never just whichever entry happens to be first.
+  const nextEvent = nextUpcomingEvent(events);
+  const nextDate = nextEvent ? eventDateParts(nextEvent.date) : null;
 
   return (
     <>
@@ -87,17 +91,20 @@ function Home() {
               </div>
 
               {/* Floating glass "next concert" chip */}
-              <div className="absolute -bottom-6 left-1/2 w-64 -translate-x-1/2 rounded-2xl border border-stage-line bg-stage-glass-strong p-4 text-left backdrop-blur-md motion-safe:animate-float">
-                <p className="text-[0.68rem] font-bold uppercase tracking-widest text-tile-fg">
-                  Next concert
-                </p>
-                <p className="mt-1 font-serif text-lg leading-tight text-stage-fg">
-                  {nextEvent.name}
-                </p>
-                <p className="mt-1 text-sm text-stage-muted">
-                  {nextEvent.month} {Number(nextEvent.day)} · {nextEvent.place} · {nextEvent.time}
-                </p>
-              </div>
+              {nextEvent && (
+                <div className="absolute -bottom-6 left-1/2 w-64 -translate-x-1/2 rounded-2xl border border-stage-line bg-stage-glass-strong p-4 text-left backdrop-blur-md motion-safe:animate-float">
+                  <p className="text-[0.68rem] font-bold uppercase tracking-widest text-tile-fg">
+                    Next concert
+                  </p>
+                  <p className="mt-1 font-serif text-lg leading-tight text-stage-fg">
+                    {nextEvent.name}
+                  </p>
+                  <p className="mt-1 text-sm text-stage-muted">
+                    {nextDate ? `${nextDate.month} ${nextDate.dayOfMonth} · ` : ""}
+                    {nextEvent.place} · {nextEvent.time}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -134,7 +141,7 @@ function Home() {
                 chance to hold an instrument. Today our volunteer teachers run lessons, lend out
                 instruments, and play free concerts for the whole community.
               </p>
-              <p>Every peso we raise goes to instruments, sheet music, and rehearsal space.</p>
+              <p>Every dollar we raise goes to instruments, sheet music, and rehearsal space.</p>
             </div>
           </div>
 
@@ -173,7 +180,7 @@ function Home() {
           <SectionHeading
             eyebrow="Upcoming"
             title="Rehearsals & events"
-            text="Every event is free and open to the neighbourhood. Tap RSVP to let us know you are coming."
+            text="Every event is free and open to the neighbourhood — no tickets and no sign-up, just come along."
           />
           <div className="mt-10 grid gap-4">
             {events.map((event) => (

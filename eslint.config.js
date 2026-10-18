@@ -21,7 +21,7 @@ export default defineConfig([
   },
   {
     // The donation API and the dev/build scripts run in Node, not the browser.
-    files: ["server/**/*.js", "scripts/**/*.mjs"],
+    files: ["server/**/*.{js,mjs}", "scripts/**/*.mjs"],
     extends: [js.configs.recommended],
     languageOptions: {
       ecmaVersion: 2023,

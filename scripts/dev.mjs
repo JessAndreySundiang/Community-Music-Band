@@ -60,7 +60,7 @@ for (const { label, color, script } of targets) {
       console.log(
         prefix(
           code === CONFIG_ERROR
-            ? "The API could not start: check STRIPE_SECRET_KEY in server/.env (sk_test_...)."
+            ? "The API could not start: check STRIPE_SECRET_KEY in server/.env (sk_test_... or sk_live_...)."
             : "The donation form will not work until the API is listening on port 4242 again.",
         ),
       );
