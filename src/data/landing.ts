@@ -59,7 +59,7 @@ export const events: BandEvent[] = [
     id: "autumn-plaza",
     date: "2026-11-08",
     name: "Autumn Plaza Concert",
-    place: "Town Plaza",
+    place: "Mexico Municipal Plaza, Mexico, Pampanga",
     time: "4:00 PM",
     instruments: ["Trumpet", "Clarinet"],
   },
@@ -67,7 +67,7 @@ export const events: BandEvent[] = [
     id: "carols-brass",
     date: "2026-12-13",
     name: "Carols and Brass",
-    place: "Parish Hall",
+    place: "Provincial Capitol Grounds, San Fernando, Pampanga",
     time: "6:00 PM",
     instruments: ["Horn", "Trombone"],
   },
@@ -75,7 +75,7 @@ export const events: BandEvent[] = [
     id: "open-rehearsal",
     date: "2027-01-16",
     name: "Open Rehearsal & Sign-ups",
-    place: "Community Center",
+    place: "Pandacaqui Community Center, Mexico, Pampanga",
     time: "9:00 AM",
     instruments: ["Flute", "Percussion"],
   },
@@ -207,4 +207,9 @@ export const contact = {
   phoneLabel: "0994-329-5457",
   phoneHref: "tel:+639943295457",
   address: "Pandacaqui, Mexico, Pampanga, Philippines",
+  /**
+   * Where rehearsals happen, spelled out with the town, the province and the
+   * country so the venue cannot be mistaken for somewhere abroad.
+   */
+  venue: "Pandacaqui Community Center, Mexico, Pampanga, Philippines",
 } as const;

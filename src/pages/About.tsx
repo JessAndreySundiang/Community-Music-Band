@@ -47,7 +47,7 @@ const values = [
 
 const joinDetails = [
   { Icon: IconCalendar, term: "When", detail: "Saturdays, 9:00 AM to 12:00 NN" },
-  { Icon: IconMapPin, term: "Where", detail: "Community Center, Main Hall" },
+  { Icon: IconMapPin, term: "Where", detail: contact.venue },
   { Icon: IconHeart, term: "Cost", detail: "Free" },
   { Icon: IconClock, term: "Bring", detail: "Your instrument, or borrow one from us" },
 ];
@@ -148,7 +148,7 @@ function About() {
           <SectionHeading
             eyebrow="Come and see"
             title="Join a rehearsal"
-            text="Come to any Saturday rehearsal. You can watch first, or sit in and play."
+            text="Come to any Saturday rehearsal in Pandacaqui. You can watch first, or sit in and play."
           />
           <dl className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {joinDetails.map(({ Icon, term, detail }) => (

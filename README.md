@@ -25,7 +25,7 @@ Stripe account, and test cards (e.g. `4242 4242 4242 4242`) only work in test mo
 
 | Command | What it does |
 | --- | --- |
-| `npm run dev` | Vite (web) **and** the donation API together |
+| `npm run dev` | Vite (web), the donation API, **and** the Stripe CLI forwarder together |
 | `npm run dev:web` | Vite only |
 | `npm run dev:api` | Donation API only |
 | `npm run build` | Type-check (`tsc -b`) and build for production |
@@ -86,6 +86,10 @@ falls back to `5174` because `5173` was already taken.
 
 ### Recording donations locally
 
+`npm run dev` starts the Stripe CLI forwarder as a third process (tagged `[stripe]`), so a completed
+donation reaches the API without you having to remember anything extra. If the CLI is not installed it
+is skipped with a note, and you start it yourself:
+
 ```bash
 stripe listen --forward-to localhost:4242/stripe-webhook --events payment_intent.succeeded
 ```
@@ -93,7 +97,9 @@ stripe listen --forward-to localhost:4242/stripe-webhook --events payment_intent
 Recent Stripe CLI versions refuse to start without an explicit event list (`--events`, or
 `--all-snapshot`/`--all-thin` for everything). `payment_intent.succeeded` is the only event this API
 records, so listing it keeps the output readable. The listener must stay running for gifts to be
-recorded — the signing secret only lets the API verify deliveries, it does not pull them in.
+recorded — the signing secret only lets the API verify deliveries, it does not pull them in. A
+donation made while the listener is down still succeeds at Stripe, but the API never hears about it:
+nothing is written to the ledger and no email is sent.
 
 Copy the `whsec_...` value it prints into `server/.env` as `STRIPE_WEBHOOK_SECRET` and restart the
 API. `GET /health` reports `"webhooks": true` once it is wired up. Then:

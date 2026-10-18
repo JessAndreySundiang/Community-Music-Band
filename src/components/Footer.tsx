@@ -5,7 +5,7 @@ import logo from "../assets/logo.svg";
 
 const rehearsal = [
   { Icon: IconClock, text: "Saturdays, 9:00 AM to 12:00 NN" },
-  { Icon: IconMapPin, text: "Community Center, Main Hall" },
+  { Icon: IconMapPin, text: contact.venue },
 ];
 
 const linkFocus =
