@@ -202,3 +202,61 @@ export function IconQuote(props: IconProps) {
     </Base>
   );
 }
+
+export function IconLock(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="4.5" y="10" width="15" height="10.5" rx="2.5" />
+      <path d="M8 10V7.5a4 4 0 0 1 8 0V10" />
+      <path d="M12 14v2.6" />
+    </Base>
+  );
+}
+
+export function IconShieldCheck(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M12 3 5 6v5.4c0 4.3 2.9 7.5 7 9.6 4.1-2.1 7-5.3 7-9.6V6l-7-3Z" />
+      <path d="m9 11.8 2.1 2.2 4-4.2" />
+    </Base>
+  );
+}
+
+export function IconCheckCircle(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="m8.4 12.2 2.4 2.4 4.8-5.2" />
+    </Base>
+  );
+}
+
+export function IconAlert(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M12 4.3 3.4 19h17.2L12 4.3Z" />
+      <path d="M12 10v4.1" />
+      <circle cx="12" cy="16.8" r=".9" fill="currentColor" stroke="none" />
+    </Base>
+  );
+}
+
+export function IconInfo(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 11.2v5" />
+      <circle cx="12" cy="8" r=".9" fill="currentColor" stroke="none" />
+    </Base>
+  );
+}
+
+/** Pair with `animate-spin`; the arc alone reads as motion, the track keeps it stable. */
+export function IconSpinner(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="12" cy="12" r="8.5" strokeOpacity="0.25" />
+      <path d="M20.5 12A8.5 8.5 0 0 0 12 3.5" />
+    </Base>
+  );
+}

@@ -1,25 +1,25 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Elements } from "@stripe/react-stripe-js";
+import { Link } from "react-router-dom";
+import type { StripeElementsOptions } from "@stripe/stripe-js";
 import CheckoutForm from "../components/CheckoutForm";
+import DonationReceipt from "../components/DonationReceipt";
 import PageHero from "../components/PageHero";
 import SectionHeading from "../components/SectionHeading";
-import { IconCap, IconMusic, IconTicket } from "../components/Icons";
-import { stripePromise, hasStripeKey } from "../lib/stripe";
 import {
-  DONATION_MAX_USD,
-  DONATION_MIN_USD,
-  formatUsd,
-  parseDonationAmount,
-} from "../lib/donation";
+  IconAlert,
+  IconCap,
+  IconCheckCircle,
+  IconLock,
+  IconMusic,
+  IconTicket,
+  IconUsers,
+} from "../components/Icons";
+import { hasStripeKey, stripeMode, stripePromise } from "../lib/stripe";
+import { parseDonationAmount, type ConfirmedDonation } from "../lib/donation";
 import { usePageTitle } from "../lib/usePageTitle";
-
-type Receipt = {
-  id: string;
-  name: string;
-  amount: number;
-};
-
-const presets: number[] = [5, 10, 25, 50];
+import { useResolvedTheme } from "../lib/useResolvedTheme";
+import { buildStripeAppearance } from "../lib/stripeAppearance";
 
 const impact = [
   {
@@ -44,10 +44,38 @@ const impact = [
 
 function Donate() {
   usePageTitle("Donate");
-  const [amountText, setAmountText] = useState<string>("25");
-  const [receipt, setReceipt] = useState<Receipt | null>(null);
+  const [amountText, setAmountText] = useState("25");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [processing, setProcessing] = useState(false);
+  const [donation, setDonation] = useState<ConfirmedDonation | null>(null);
+  const theme = useResolvedTheme();
+
+  // Stripe cannot restyle an already-mounted Payment Element, so the Elements
+  // instance is rebuilt when the theme changes. The name and email live above it
+  // so nothing the donor typed is lost. Never swap it mid-payment: that would
+  // cancel the confirmation they are waiting on.
+  const [stripeTheme, setStripeTheme] = useState(theme);
+  if (!processing && stripeTheme !== theme) {
+    setStripeTheme(theme);
+  }
 
   const amount = parseDonationAmount(amountText);
+
+  // Deferred intent: Elements needs an amount to render wallets and payment
+  // methods, but the PaymentIntent is still created on submit, so the API,
+  // ledger and webhook flow stay exactly as they were.
+  const elementsOptions = useMemo<StripeElementsOptions>(
+    () => ({
+      mode: "payment",
+      amount: Math.max(100, Math.round((amount ?? 25) * 100)),
+      currency: "usd",
+      appearance: buildStripeAppearance(stripeTheme),
+    }),
+    [amount, stripeTheme],
+  );
+
+  const paid = donation !== null;
 
   return (
     <>
@@ -58,19 +86,19 @@ function Donate() {
       />
 
       <section className="band bg-paper">
-        <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 py-20 md:py-24 lg:grid-cols-[1fr_minmax(320px,460px)] lg:items-start">
-          {/* Impact */}
-          <div>
+        <div className="mx-auto grid w-full max-w-6xl gap-10 px-5 py-16 md:py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:items-start lg:gap-14">
+          {/* Impact — second on phones so the checkout is one thumb away. */}
+          <div className="order-2 lg:order-1">
             <SectionHeading
               eyebrow="Your impact"
               title="Where your gift goes"
               text="We are a volunteer band, so nothing is spent on salaries."
             />
-            <ul className="space-y-4">
+            <ul className="mt-6 space-y-4">
               {impact.map(({ id, title, text, Icon }) => (
                 <li
                   key={id}
-                  className="flex items-start gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-brass/60 hover:shadow-xl"
+                  className="flex items-start gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm transition-colors duration-200 hover:border-brass/50"
                 >
                   <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brass/10 text-brass">
                     <Icon className="size-5.5" />
@@ -93,94 +121,127 @@ function Donate() {
                 Run by volunteers, funded by donations and local sponsors.
               </p>
             </div>
+
+            <div className="mt-6 rounded-2xl border border-line bg-surface p-6">
+              <h3 className="font-serif text-lg font-semibold text-ink">Other ways to help</h3>
+              <ul className="mt-3 grid gap-3 text-sm">
+                <li className="flex items-start gap-3">
+                  <IconUsers className="mt-0.5 size-4 shrink-0 text-brass" />
+                  <p className="text-muted">
+                    <a
+                      href="mailto:communitymusicband@gmail.com?subject=Volunteering"
+                      className="font-semibold text-ink underline decoration-brass/50 underline-offset-2 hover:decoration-brass"
+                    >
+                      Volunteer
+                    </a>{" "}
+                    at a rehearsal or on concert day.
+                  </p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <IconMusic className="mt-0.5 size-4 shrink-0 text-brass" />
+                  <p className="text-muted">
+                    <a
+                      href="mailto:communitymusicband@gmail.com?subject=Instrument%20donation"
+                      className="font-semibold text-ink underline decoration-brass/50 underline-offset-2 hover:decoration-brass"
+                    >
+                      Donate an instrument
+                    </a>{" "}
+                    you no longer play; we lend it to a student.
+                  </p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <IconTicket className="mt-0.5 size-4 shrink-0 text-brass" />
+                  <p className="text-muted">
+                    <Link
+                      to="/"
+                      className="font-semibold text-ink underline decoration-brass/50 underline-offset-2 hover:decoration-brass"
+                    >
+                      Bring a friend
+                    </Link>{" "}
+                    to the next free concert.
+                  </p>
+                </li>
+              </ul>
+            </div>
           </div>
 
-          {/* Payment */}
-          <div className="rounded-3xl border border-line border-t-[6px] border-t-brass bg-surface p-6 shadow-xl sm:p-8">
-            {/* Always mounted so screen readers announce the result when it changes. */}
-            <p role="status" aria-live="polite" className="sr-only">
-              {receipt
-                ? `Thank you, ${receipt.name}. Your ${formatUsd(receipt.amount)} donation was received.`
-                : ""}
-            </p>
-
-            {receipt ? (
-              <div className="grid justify-items-start gap-3">
-                <h2 className="font-serif text-2xl font-semibold text-ink">
-                  Thank you, {receipt.name}!
-                </h2>
-                <p className="text-muted">
-                  Your {formatUsd(receipt.amount)} donation was received.
-                </p>
-                <p className="text-xs text-muted">
-                  Payment ID: <code className="break-all">{receipt.id}</code>
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setReceipt(null)}
-                  className="mt-2 inline-flex items-center gap-2 rounded-full bg-brass-bright px-6 py-3 font-bold text-night-950 shadow-lg shadow-amber-500/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-bright active:translate-y-0"
-                >
-                  Make another donation
-                </button>
+          {/* Checkout */}
+          <aside className="order-1 lg:sticky lg:order-2 lg:top-24">
+            <div className="overflow-hidden rounded-3xl border border-line bg-surface shadow-xl shadow-night-950/5">
+              <div className="border-b border-line bg-paper px-6 py-5 sm:px-8">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brass">
+                    {paid ? "Donation complete" : "Secure checkout"}
+                  </p>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-[11px] font-semibold text-muted">
+                    {paid ? (
+                      <>
+                        <IconCheckCircle className="size-3.5 text-brass" />
+                        Paid
+                      </>
+                    ) : (
+                      <>
+                        <IconLock className="size-3.5" />
+                        Encrypted
+                      </>
+                    )}
+                  </span>
+                </div>
+                {!paid && (
+                  <h2 className="mt-2 font-serif text-2xl font-semibold text-ink">
+                    Complete your donation
+                  </h2>
+                )}
               </div>
-            ) : !hasStripeKey ? (
-              <p
-                role="alert"
-                className="rounded-xl border-l-4 border-plume bg-plume/10 p-4 font-medium text-plume"
-              >
-                Stripe is not set up yet. Add VITE_STRIPE_PUBLISHABLE_KEY (pk_test_… or pk_live_…)
-                to the .env file, then restart npm run dev.
-              </p>
-            ) : (
-              <>
-                <h2 className="font-serif text-2xl font-semibold text-ink">Make a donation</h2>
 
-                <div
-                  className="mt-5 grid grid-cols-4 gap-2"
-                  role="group"
-                  aria-label="Donation amount"
-                >
-                  {presets.map((preset) => {
-                    const active = amount === preset;
-                    return (
-                      <button
-                        type="button"
-                        key={preset}
-                        aria-pressed={active}
-                        onClick={() => setAmountText(String(preset))}
-                        className={`rounded-xl border-2 py-2.5 font-bold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-bright ${
-                          active
-                            ? "border-brass-bright bg-brass-bright text-night-950"
-                            : "border-brass/40 text-brass hover:bg-brass/10"
-                        }`}
-                      >
-                        ${preset}
-                      </button>
-                    );
-                  })}
+              {donation ? (
+                <DonationReceipt
+                  donation={donation}
+                  onReset={() => {
+                    setDonation(null);
+                    setAmountText("25");
+                  }}
+                />
+              ) : !hasStripeKey ? (
+                <div className="px-6 py-8 sm:px-8">
+                  <p
+                    role="alert"
+                    className="flex items-start gap-2 rounded-xl border border-l-4 border-plume/30 border-l-plume bg-plume/10 p-4 font-medium text-plume"
+                  >
+                    <IconAlert className="mt-0.5 size-4 shrink-0" />
+                    Stripe is not set up yet. Add VITE_STRIPE_PUBLISHABLE_KEY (pk_test_… or
+                    pk_live_…) to the .env file, then restart npm run dev.
+                  </p>
                 </div>
-
-                <label className="mt-4 grid gap-1.5 text-sm font-bold text-ink">
-                  Other amount (USD, {DONATION_MIN_USD} to {DONATION_MAX_USD})
-                  <input
-                    type="number"
-                    min={DONATION_MIN_USD}
-                    max={DONATION_MAX_USD}
-                    step={1}
-                    value={amountText}
-                    onChange={(e) => setAmountText(e.target.value)}
-                    className="rounded-xl border border-line bg-paper px-3.5 py-3 text-base font-normal text-ink transition-colors duration-200 focus:border-brass focus:outline-none"
+              ) : (
+                <Elements key={stripeTheme} stripe={stripePromise} options={elementsOptions}>
+                  <CheckoutForm
+                    amount={amount}
+                    amountText={amountText}
+                    onAmountTextChange={setAmountText}
+                    name={name}
+                    onNameChange={setName}
+                    email={email}
+                    onEmailChange={setEmail}
+                    onProcessingChange={setProcessing}
+                    onPaid={setDonation}
+                    testMode={stripeMode === "test"}
                   />
-                </label>
+                </Elements>
+              )}
+            </div>
 
-                <div className="mt-4">
-                  <Elements stripe={stripePromise}>
-                    <CheckoutForm amount={amount ?? 0} onPaid={(paid) => setReceipt(paid)} />
-                  </Elements>
-                </div>
-              </>
-            )}
-          </div>
+            <p className="mt-4 px-1 text-center text-xs text-muted">
+              Gifts are processed in USD. Need a hand?{" "}
+              <a
+                href="mailto:communitymusicband@gmail.com"
+                className="font-semibold text-brass underline underline-offset-2 hover:no-underline"
+              >
+                Email the band
+              </a>
+              .
+            </p>
+          </aside>
         </div>
       </section>
     </>

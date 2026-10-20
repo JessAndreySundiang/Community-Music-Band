@@ -19,6 +19,14 @@ export function formatUsd(value: number): string {
   return `$${value.toFixed(2)}`;
 }
 
+/** A donation Stripe has confirmed, as shown on the receipt. */
+export type ConfirmedDonation = {
+  id: string;
+  name: string;
+  amount: number;
+  email: string;
+};
+
 /**
  * Explains a failure from the request to our own donation API. Used only at
  * that point, so a TypeError here really is an unreachable server or a blocked

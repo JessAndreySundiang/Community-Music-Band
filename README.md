@@ -69,12 +69,13 @@ falls back to `5174` because `5173` was already taken.
 
 ## How donations work
 
-1. The browser posts an amount in cents to `POST /create-payment-intent` with an
-   `Idempotency-Key` header derived from the donor's details, so a double-click or a retry cannot
-   charge twice.
+1. The browser posts the amount and the donor's name and email to
+   `POST /create-payment-intent` with an `Idempotency-Key` derived from those details, so a
+   double-click or a retry cannot charge twice.
 2. The API validates the amount (`$1`–`$1000`) and creates the PaymentIntent with Stripe. Card
-   details go straight from the browser to Stripe — they never reach this server.
-3. The browser confirms the card with Stripe and shows a receipt built from the amount **Stripe
+   details are collected by Stripe's Payment Element in its own iframe and go straight to Stripe —
+   they never reach this server.
+3. The browser confirms the payment with Stripe and shows a receipt built from the amount **Stripe
    confirmed**, not the amount that was typed in.
 4. Stripe calls `POST /stripe-webhook` on completion. The signature is verified against
    `STRIPE_WEBHOOK_SECRET` before anything is written to an append-only JSONL ledger at

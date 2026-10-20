@@ -9,6 +9,16 @@ export const stripePromise = isUsablePublishableKey(publishableKey)
   ? loadStripe(publishableKey)
   : null;
 
+/**
+ * Which Stripe account the publishable key points at. The checkout shows a
+ * "test mode" note for pk_test_ keys so nobody mistakes a rehearsal for a sale.
+ */
+export const stripeMode: "test" | "live" | "unconfigured" = isLivePublishableKey(publishableKey)
+  ? "live"
+  : isUsablePublishableKey(publishableKey)
+    ? "test"
+    : "unconfigured";
+
 // A live key means real cards. The band should know that before a donation, not
 // after — a warning in the console is enough for the people who run the site.
 if (isLivePublishableKey(publishableKey)) {
