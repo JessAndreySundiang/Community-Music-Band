@@ -242,6 +242,7 @@ function CheckoutForm({
           name: name.trim(),
           amount: result.paymentIntent.amount / 100,
           email: email.trim(),
+          paidAt: Date.now(),
         });
       } else if (result.paymentIntent) {
         setError(`Payment status: ${result.paymentIntent.status}`);

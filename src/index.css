@@ -271,8 +271,156 @@
   }
 }
 
+/* Success dialog. The browser owns the focus trap, Escape key and backdrop;
+   we only style the box and give the entry a small, quiet rise. */
+.donation-dialog {
+  color: var(--ink);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  box-shadow: 0 32px 80px -24px rgb(5 8 15 / 0.45);
+}
+.donation-dialog::backdrop {
+  background-color: rgb(5 8 15 / 0.62);
+  backdrop-filter: blur(6px);
+}
+.donation-dialog[open] {
+  animation: dialogIn 220ms cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+.donation-dialog[open]::backdrop {
+  animation: backdropIn 180ms ease-out;
+}
+@keyframes dialogIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes dialogInSheet {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes backdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (max-width: 639.98px) {
+  .donation-dialog[open] {
+    animation-name: dialogInSheet;
+  }
+}
+
+/* The check draws itself once, using pathLength="100" on the SVG path. */
+.check-stroke {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+}
+.donation-dialog[open] .check-stroke {
+  animation: checkDraw 420ms cubic-bezier(0.3, 0.7, 0.3, 1) 120ms forwards;
+}
+@keyframes checkDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Printing: the portal at the end of <body> is the only thing that prints. */
+.print-receipt {
+  display: none;
+}
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  body > :not(.print-receipt) {
+    display: none !important;
+  }
+  .print-receipt {
+    display: block !important;
+    color: #111;
+  }
+  .print-receipt-inner {
+    max-width: 520px;
+    margin: 0 auto;
+    font-family: var(--font-sans);
+  }
+  .print-receipt .print-eyebrow {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .print-receipt h1 {
+    margin: 4px 0 8px;
+    font-family: var(--font-serif);
+    font-size: 28px;
+    font-weight: 600;
+  }
+  .print-receipt .print-lead {
+    margin: 0;
+    font-size: 14px;
+    color: #444;
+  }
+  .print-receipt table {
+    width: 100%;
+    margin-top: 22px;
+    border-collapse: collapse;
+  }
+  .print-receipt th,
+  .print-receipt td {
+    padding: 10px 0;
+    border-top: 1px solid #d8d8d8;
+    text-align: left;
+    vertical-align: top;
+    font-size: 13px;
+  }
+  .print-receipt th {
+    width: 34%;
+    font-weight: 500;
+    color: #555;
+  }
+  .print-receipt td {
+    font-weight: 600;
+    word-break: break-all;
+  }
+  .print-receipt .print-foot {
+    margin-top: 26px;
+    padding-top: 12px;
+    border-top: 1px solid #d8d8d8;
+    font-size: 11px;
+    color: #666;
+  }
+  @page {
+    margin: 18mm;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  .donation-dialog[open],
+  .donation-dialog[open]::backdrop,
+  .donation-dialog[open] .check-stroke {
+    animation: none;
+  }
+  .check-stroke {
+    stroke-dashoffset: 0;
   }
 }

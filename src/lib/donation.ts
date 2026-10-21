@@ -19,12 +19,25 @@ export function formatUsd(value: number): string {
   return `$${value.toFixed(2)}`;
 }
 
+/** Formats the confirmation time for the receipt: "Oct 21, 2026, 2:00 PM". */
+export function formatReceiptDate(timestamp: number): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(timestamp);
+}
+
 /** A donation Stripe has confirmed, as shown on the receipt. */
 export type ConfirmedDonation = {
   id: string;
   name: string;
   amount: number;
   email: string;
+  /** When the browser received Stripe's confirmation, in epoch milliseconds. */
+  paidAt: number;
 };
 
 /**

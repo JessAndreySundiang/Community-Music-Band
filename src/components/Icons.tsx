@@ -231,6 +231,25 @@ export function IconCheckCircle(props: IconProps) {
   );
 }
 
+export function IconCopy(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="8.5" y="8.5" width="12" height="12" rx="2.4" />
+      <path d="M15.5 8.5V6.4a2.4 2.4 0 0 0-2.4-2.4H6.4A2.4 2.4 0 0 0 4 6.4v6.7a2.4 2.4 0 0 0 2.4 2.4h2.1" />
+    </Base>
+  );
+}
+
+export function IconPrinter(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M6.5 17.5H4.9A1.9 1.9 0 0 1 3 15.6v-4.7a1.9 1.9 0 0 1 1.9-1.9h14.2a1.9 1.9 0 0 1 1.9 1.9v4.7a1.9 1.9 0 0 1-1.9 1.9h-1.6" />
+      <path d="M6.5 9V4.5A1.5 1.5 0 0 1 8 3h8a1.5 1.5 0 0 1 1.5 1.5V9" />
+      <rect x="6.5" y="14.5" width="11" height="6.5" rx="1.2" />
+    </Base>
+  );
+}
+
 export function IconAlert(props: IconProps) {
   return (
     <Base {...props}>

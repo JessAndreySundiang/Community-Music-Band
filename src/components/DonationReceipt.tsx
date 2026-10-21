@@ -1,25 +1,21 @@
-import { useEffect, useRef } from "react";
+import type { RefObject } from "react";
 import { Link } from "react-router-dom";
-import { formatUsd, type ConfirmedDonation } from "../lib/donation";
+import { formatReceiptDate, formatUsd, type ConfirmedDonation } from "../lib/donation";
 import { IconCheckCircle, IconLock } from "./Icons";
 
 type DonationReceiptProps = {
   donation: ConfirmedDonation;
+  /** Focused by the page once the confirmation dialog closes. */
+  headingRef: RefObject<HTMLHeadingElement | null>;
+  onViewReceipt: () => void;
   onReset: () => void;
 };
 
 /**
- * The post-payment panel. Focus moves to the heading so a keyboard or screen
- * reader user is told the payment went through instead of being left at the
- * button they pressed.
+ * The permanent record left in the checkout panel after the success dialog is
+ * dismissed, so the donor never has to rely on a popup they already closed.
  */
-function DonationReceipt({ donation, onReset }: DonationReceiptProps) {
-  const headingRef = useRef<HTMLHeadingElement>(null);
-
-  useEffect(() => {
-    headingRef.current?.focus();
-  }, []);
-
+function DonationReceipt({ donation, headingRef, onViewReceipt, onReset }: DonationReceiptProps) {
   return (
     <div className="grid gap-6 px-6 py-8 sm:px-8">
       <div className="flex flex-col items-start gap-4">
@@ -46,6 +42,10 @@ function DonationReceipt({ donation, onReset }: DonationReceiptProps) {
           <dd className="font-serif text-xl font-semibold text-ink">
             {formatUsd(donation.amount)}
           </dd>
+        </div>
+        <div className="flex items-baseline justify-between gap-4">
+          <dt className="text-muted">Date</dt>
+          <dd className="text-right font-medium text-ink">{formatReceiptDate(donation.paidAt)}</dd>
         </div>
         <div className="flex items-center justify-between gap-4">
           <dt className="text-muted">Status</dt>
@@ -78,12 +78,21 @@ function DonationReceipt({ donation, onReset }: DonationReceiptProps) {
         >
           Make another donation
         </button>
-        <Link
-          to="/"
-          className="inline-flex w-full items-center justify-center rounded-full border border-line px-6 py-3 font-semibold text-ink transition-colors duration-200 hover:border-brass hover:text-brass focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-bright"
-        >
-          Back to home
-        </Link>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={onViewReceipt}
+            className="inline-flex items-center justify-center rounded-full border border-line px-4 py-3 text-sm font-semibold text-ink transition-colors duration-200 hover:border-brass hover:text-brass focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-bright"
+          >
+            View receipt
+          </button>
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center rounded-full border border-line px-4 py-3 text-sm font-semibold text-ink transition-colors duration-200 hover:border-brass hover:text-brass focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-bright"
+          >
+            Back to home
+          </Link>
+        </div>
       </div>
 
       <p className="flex items-center gap-1.5 text-[11px] text-muted">

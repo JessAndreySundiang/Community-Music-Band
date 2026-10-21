@@ -4,6 +4,7 @@ import {
   DONATION_MIN_USD,
   createIdempotencyKey,
   describeApiError,
+  formatReceiptDate,
   formatUsd,
   parseDonationAmount,
 } from "./donation";
@@ -37,6 +38,20 @@ describe("formatUsd", () => {
     [1000, "$1000.00"],
   ])("formats %o as %s", (value, expected) => {
     expect(formatUsd(value)).toBe(expected);
+  });
+});
+
+describe("formatReceiptDate", () => {
+  // Local time on purpose: the donor reads the clock on their own wall, and the
+  // test only pins the shape so it stays correct in any time zone.
+  it("reads like the date line on a receipt", () => {
+    expect(formatReceiptDate(Date.UTC(2026, 9, 21, 14, 0))).toMatch(
+      /^[A-Z][a-z]{2} \d{1,2}, \d{4}, \d{1,2}:\d{2} [AP]M$/,
+    );
+  });
+
+  it("keeps the year the payment happened", () => {
+    expect(formatReceiptDate(Date.UTC(2026, 9, 21, 14, 0))).toContain("2026");
   });
 });
 

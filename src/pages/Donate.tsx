@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Elements } from "@stripe/react-stripe-js";
 import { Link } from "react-router-dom";
 import type { StripeElementsOptions } from "@stripe/stripe-js";
 import CheckoutForm from "../components/CheckoutForm";
 import DonationReceipt from "../components/DonationReceipt";
+import DonationSuccessDialog from "../components/DonationSuccessDialog";
 import PageHero from "../components/PageHero";
 import SectionHeading from "../components/SectionHeading";
 import {
@@ -49,7 +50,41 @@ function Donate() {
   const [email, setEmail] = useState("");
   const [processing, setProcessing] = useState(false);
   const [donation, setDonation] = useState<ConfirmedDonation | null>(null);
+  const [receiptOpen, setReceiptOpen] = useState(false);
+  const receiptHeadingRef = useRef<HTMLHeadingElement>(null);
+  const checkoutHeadingRef = useRef<HTMLHeadingElement>(null);
   const theme = useResolvedTheme();
+
+  /**
+   * Focus is placed by hand: the dialog's own return target (the submit button)
+   * unmounts the moment the payment succeeds, so the browser would drop focus
+   * onto <body>. This marks where it should land instead, and the effect waits
+   * until the dialog has left the top layer — focusing a control behind a modal
+   * is ignored.
+   */
+  const focusAfterDialog = useRef<"receipt" | "checkout" | null>(null);
+
+  useEffect(() => {
+    const target = focusAfterDialog.current;
+    if (!target) return;
+    if (target === "receipt" ? receiptOpen : Boolean(donation)) return;
+
+    focusAfterDialog.current = null;
+    const heading = target === "receipt" ? receiptHeadingRef : checkoutHeadingRef;
+    heading.current?.focus();
+  }, [receiptOpen, donation]);
+
+  function closeReceipt() {
+    focusAfterDialog.current = "receipt";
+    setReceiptOpen(false);
+  }
+
+  function donateAgain() {
+    focusAfterDialog.current = "checkout";
+    setReceiptOpen(false);
+    setDonation(null);
+    setAmountText("25");
+  }
 
   // Stripe cannot restyle an already-mounted Payment Element, so the Elements
   // instance is rebuilt when the theme changes. The name and email live above it
@@ -188,7 +223,11 @@ function Donate() {
                   </span>
                 </div>
                 {!paid && (
-                  <h2 className="mt-2 font-serif text-2xl font-semibold text-ink">
+                  <h2
+                    ref={checkoutHeadingRef}
+                    tabIndex={-1}
+                    className="mt-2 font-serif text-2xl font-semibold text-ink focus:outline-none"
+                  >
                     Complete your donation
                   </h2>
                 )}
@@ -197,10 +236,12 @@ function Donate() {
               {donation ? (
                 <DonationReceipt
                   donation={donation}
-                  onReset={() => {
-                    setDonation(null);
-                    setAmountText("25");
+                  headingRef={receiptHeadingRef}
+                  onViewReceipt={() => {
+                    focusAfterDialog.current = null;
+                    setReceiptOpen(true);
                   }}
+                  onReset={donateAgain}
                 />
               ) : !hasStripeKey ? (
                 <div className="px-6 py-8 sm:px-8">
@@ -224,7 +265,11 @@ function Donate() {
                     email={email}
                     onEmailChange={setEmail}
                     onProcessingChange={setProcessing}
-                    onPaid={setDonation}
+                    onPaid={(next) => {
+                      focusAfterDialog.current = null;
+                      setDonation(next);
+                      setReceiptOpen(true);
+                    }}
                     testMode={stripeMode === "test"}
                   />
                 </Elements>
@@ -244,6 +289,15 @@ function Donate() {
           </aside>
         </div>
       </section>
+
+      {donation && (
+        <DonationSuccessDialog
+          donation={donation}
+          open={receiptOpen}
+          onClose={closeReceipt}
+          onDonateAgain={donateAgain}
+        />
+      )}
     </>
   );
 }
