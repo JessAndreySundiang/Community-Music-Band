@@ -1,0 +1,212 @@
+{
+  "hero": {
+    "eyebrow": "About us",
+    "title": "Music should be within everyone's reach.",
+    "description": "I'm Jess Andrey Sundiang, a flute and piccolo player and BSIT student. I built this site to help more families find a band where anyone can learn, borrow an instrument, and perform. Your support helps us care for instruments, provide music, and keep concerts free for our community.",
+    "ctas": [
+      {
+        "id": "donate-cta",
+        "label": "Help keep music free",
+        "to": "/donate",
+        "variant": "primary"
+      },
+      {
+        "id": "visit-cta",
+        "label": "Visit a rehearsal",
+        "href": "#join",
+        "variant": "secondary"
+      }
+    ]
+  },
+
+  "profile": {
+    "name": "Jess Andrey Sundiang",
+    "age": 20,
+    "role": "Flute and piccolo player · Community band volunteer",
+    "course": "3rd Year BSIT",
+    "school": "Angeles University Foundation",
+    "instrument": "Flute / Piccolo",
+    "bio": "A passionate musician and aspiring IT professional dedicated to making music education accessible in Pampanga. Founded this platform to connect the community through the universal language of music."
+  },
+
+  "story": {
+    "eyebrow": "Our story",
+    "title": "About the band",
+    "paragraphs": [
+      "Our founders were retired school band teachers and local musicians who missed playing together. They opened their rehearsals to anyone who wanted to learn, and the band has grown by word of mouth ever since.",
+      "We are registered as a non-profit and every volunteer, from conductor to librarian, gives their time for free."
+    ]
+  },
+
+  "timeline": [
+    { "year": "2012", "text": "Founded in a parish hall with 14 members." },
+    { "year": "2016", "text": "Free youth lessons and the instrument lending library begin." },
+    {
+      "year": "2020",
+      "text": "Rehearsals move outdoors, and concerts are streamed for families at home."
+    },
+    { "year": "2023", "text": "The Senior Ensemble opens for adults 55 and up." },
+    {
+      "year": "2026",
+      "text": "45 musicians, 250 students taught, and monthly plaza concerts."
+    }
+  ],
+
+  "values": {
+    "eyebrow": "What guides us",
+    "title": "What we stand for",
+    "items": [
+      {
+        "id": "open",
+        "icon": "IconUsers",
+        "title": "Open to all",
+        "text": "No audition, no fee, and no experience needed. If you want to play, there is a seat for you."
+      },
+      {
+        "id": "learn",
+        "icon": "IconMusic",
+        "title": "Learn by playing",
+        "text": "We teach through rehearsal and performance, so every student plays real music from the first month."
+      },
+      {
+        "id": "give",
+        "icon": "IconHeart",
+        "title": "Give back",
+        "text": "Every concert is free, and every dollar donated goes to instruments, music, and rehearsal space."
+      }
+    ]
+  },
+
+  "mission": {
+    "eyebrow": "Our mission",
+    "title": "Why we exist",
+    "statement": "To remove every barrier — cost, age, experience — that keeps people from making music, and to strengthen our community through free concerts and education.",
+    "pillars": [
+      {
+        "id": "access",
+        "icon": "IconKey",
+        "title": "Access",
+        "text": "Free instrument lending, no-cost lessons, and open rehearsals ensure nobody is turned away."
+      },
+      {
+        "id": "education",
+        "icon": "IconCap",
+        "title": "Education",
+        "text": "Structured mentorship pairs experienced musicians with beginners for hands-on learning."
+      },
+      {
+        "id": "community",
+        "icon": "IconUsers",
+        "title": "Community",
+        "text": "Monthly free concerts and collaborative events unite neighborhoods through shared musical experiences."
+      }
+    ]
+  },
+
+  "impact": {
+    "eyebrow": "Our impact",
+    "title": "By the numbers",
+    "stats": [
+      {
+        "id": "years",
+        "value": "14",
+        "label": "Years serving Pampanga",
+        "icon": "IconCalendar"
+      },
+      {
+        "id": "musicians",
+        "value": "45",
+        "label": "Active volunteer musicians",
+        "icon": "IconMusic"
+      },
+      {
+        "id": "students",
+        "value": "250+",
+        "label": "Students taught to date",
+        "icon": "IconCap"
+      },
+      {
+        "id": "concerts",
+        "value": "30+",
+        "label": "Free concerts every year",
+        "icon": "IconHeart"
+      },
+      {
+        "id": "instruments",
+        "value": "60",
+        "label": "Instruments in lending library",
+        "icon": "IconInstrument"
+      },
+      {
+        "id": "cost",
+        "value": "₱0",
+        "label": "Cost to join or attend",
+        "icon": "IconTicket"
+      }
+    ]
+  },
+
+  "faq": {
+    "eyebrow": "Common questions",
+    "title": "Frequently asked questions",
+    "items": [
+      {
+        "id": "faq-instrument",
+        "question": "Do I need to own an instrument?",
+        "answer": "No. Our instrument lending library has over 60 instruments available for free long-term loan to any active member."
+      },
+      {
+        "id": "faq-age",
+        "question": "Is there an age limit?",
+        "answer": "We welcome everyone from age 8 to 80+. Youth lessons start at 8, and the Senior Ensemble is open to adults 55 and up."
+      },
+      {
+        "id": "faq-experience",
+        "question": "What if I've never played before?",
+        "answer": "Perfect — about half our members started as complete beginners. We pair new players with experienced mentors from day one."
+      },
+      {
+        "id": "faq-cost",
+        "question": "Is there a membership fee?",
+        "answer": "Never. Everything — rehearsals, lessons, instruments, and concerts — is completely free. We are funded by voluntary donations."
+      },
+      {
+        "id": "faq-commitment",
+        "question": "How much time do I need to commit?",
+        "answer": "Saturday rehearsals run from 9:00 AM to 12:00 NN. Come when you can — there is no attendance requirement."
+      }
+    ]
+  },
+
+  "join": {
+    "eyebrow": "Come and see",
+    "title": "Join a rehearsal",
+    "text": "Come to any Saturday rehearsal in Pandacaqui. You can watch first, or sit in and play.",
+    "details": [
+      {
+        "icon": "IconCalendar",
+        "term": "When",
+        "detail": "Saturdays, 9:00 AM to 12:00 NN"
+      },
+      {
+        "icon": "IconMapPin",
+        "term": "Where",
+        "detail": "Pandacaqui Community Center, Mexico, Pampanga, Philippines"
+      },
+      { "icon": "IconHeart", "term": "Cost", "detail": "Free" },
+      {
+        "icon": "IconClock",
+        "term": "Bring",
+        "detail": "Your instrument, or borrow one from us"
+      }
+    ],
+    "ctaLabel": "Call"
+  },
+
+  "meta": {
+    "pageTitle": "About",
+    "ogTitle": "About — Community Music Band",
+    "ogDescription": "Learn about our mission to make music accessible to everyone in Pampanga. Free lessons, free instruments, free concerts.",
+    "lastUpdated": "2026-11-03"
+  }
+}

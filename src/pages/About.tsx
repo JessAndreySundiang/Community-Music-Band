@@ -1,175 +1,302 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import PageHero from "../components/PageHero";
 import SectionHeading from "../components/SectionHeading";
 import ProfileCard from "../components/ProfileCard";
 import { contact } from "../data/landing";
 import { usePageTitle } from "../lib/usePageTitle";
-import {
-  IconCalendar,
-  IconClock,
-  IconHeart,
-  IconMapPin,
-  IconMusic,
-  IconUsers,
-} from "../components/Icons";
+import { resolveIcon } from "../lib/iconMap";
+import aboutData from "../data/about.json";
+import type { AboutPageData } from "../data/about.types";
 
-const timeline = [
-  { year: "2012", text: "Founded in a parish hall with 14 members." },
-  { year: "2016", text: "Free youth lessons and the instrument lending library begin." },
-  {
-    year: "2020",
-    text: "Rehearsals move outdoors, and concerts are streamed for families at home.",
-  },
-  { year: "2023", text: "The Senior Ensemble opens for adults 55 and up." },
-  { year: "2026", text: "45 musicians, 250 students taught, and monthly plaza concerts." },
-];
-
-const values = [
-  {
-    id: "open",
-    title: "Open to all",
-    text: "No audition, no fee, and no experience needed. If you want to play, there is a seat for you.",
-    Icon: IconUsers,
-  },
-  {
-    id: "learn",
-    title: "Learn by playing",
-    text: "We teach through rehearsal and performance, so every student plays real music from the first month.",
-    Icon: IconMusic,
-  },
-  {
-    id: "give",
-    title: "Give back",
-    text: "Every concert is free, and every dollar donated goes to instruments, music, and rehearsal space.",
-    Icon: IconHeart,
-  },
-];
-
-const joinDetails = [
-  { Icon: IconCalendar, term: "When", detail: "Saturdays, 9:00 AM to 12:00 NN" },
-  { Icon: IconMapPin, term: "Where", detail: contact.venue },
-  { Icon: IconHeart, term: "Cost", detail: "Free" },
-  { Icon: IconClock, term: "Bring", detail: "Your instrument, or borrow one from us" },
-];
+const data = aboutData as AboutPageData;
 
 function About() {
-  usePageTitle("About");
+  usePageTitle(data.meta.pageTitle);
+
   return (
     <>
+      {/* ───────────────────────────── Hero ───────────────────────────── */}
       <PageHero
-        eyebrow="About us"
-        title="Music should be within everyone’s reach."
-        text="I’m Jess Andrey Sundiang, a flute and piccolo player and BSIT student. I built this site to help more families find a band where anyone can learn, borrow an instrument, and perform. Your support helps us care for instruments, provide music, and keep concerts free for our community."
+        eyebrow={data.hero.eyebrow}
+        title={data.hero.title}
+        text={data.hero.description}
       >
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            to="/donate"
-            className="inline-flex items-center gap-2 rounded-full bg-brass-bright px-6 py-3.5 font-bold text-night-950 shadow-lg shadow-amber-500/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stage-fg active:translate-y-0"
-          >
-            Help keep music free
-          </Link>
-          <a
-            href="#join"
-            className="inline-flex items-center gap-2 rounded-full border border-stage-line-strong bg-stage-glass-strong px-6 py-3.5 font-semibold text-stage-fg backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-brass/50 hover:bg-stage-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stage-fg active:translate-y-0"
-          >
-            Visit a rehearsal
-          </a>
+          {data.hero.ctas.map((cta) =>
+            cta.to ? (
+              <Link
+                key={cta.id}
+                to={cta.to}
+                className="inline-flex items-center gap-2 rounded-full bg-brass-bright px-6 py-3.5 font-bold text-night-950 shadow-lg shadow-amber-500/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stage-fg active:translate-y-0"
+              >
+                {cta.label}
+              </Link>
+            ) : (
+              <a
+                key={cta.id}
+                href={cta.href}
+                className="inline-flex items-center gap-2 rounded-full border border-stage-line-strong bg-stage-glass-strong px-6 py-3.5 font-semibold text-stage-fg backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-brass/50 hover:bg-stage-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stage-fg active:translate-y-0"
+              >
+                {cta.label}
+              </a>
+            ),
+          )}
         </div>
       </PageHero>
 
+      {/* ──────────────────────── Profile Card ────────────────────────── */}
       <section className="band bg-paper">
         <div className="mx-auto w-full max-w-6xl px-5 py-20 md:py-24">
           <ProfileCard
-            name="Jess Andrey Sundiang"
-            age={20}
-            course="3rd Year BSIT"
-            school="Angeles University Foundation"
+            name={data.profile.name}
+            age={data.profile.age}
+            course={data.profile.course}
+            school={data.profile.school}
             address={contact.address}
             phone={contact.phoneLabel}
             phoneHref={contact.phoneHref}
-            instrument="Flute / Piccolo"
+            instrument={data.profile.instrument}
           />
         </div>
       </section>
 
+      {/* ─────────────────────── Mission (NEW) ────────────────────────── */}
       <section className="band-tint bg-paper-2">
+        <div className="mx-auto w-full max-w-6xl px-5 py-20 md:py-28">
+          <SectionHeading
+            center
+            eyebrow={data.mission.eyebrow}
+            title={data.mission.title}
+          />
+          <p className="mx-auto mt-6 max-w-3xl text-center text-lg leading-relaxed text-muted">
+            {data.mission.statement}
+          </p>
+          <div className="mt-14 grid gap-5 md:grid-cols-3">
+            {data.mission.pillars.map((pillar) => {
+              const Icon = resolveIcon(pillar.icon);
+              return (
+                <div
+                  key={pillar.id}
+                  className="rounded-2xl border border-line border-t-4 border-t-brass bg-surface p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                >
+                  <span className="mb-4 grid size-12 place-items-center rounded-2xl bg-brass/10 text-brass">
+                    <Icon className="size-6" />
+                  </span>
+                  <h3 className="font-serif text-xl font-semibold tracking-tight text-ink">
+                    {pillar.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">
+                    {pillar.text}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ────────────────── Our Story + Timeline ──────────────────────── */}
+      <section className="band bg-paper">
         <div className="mx-auto grid w-full max-w-6xl items-start gap-12 px-5 py-20 md:py-28 lg:grid-cols-[1fr_1fr]">
           <div>
-            <SectionHeading eyebrow="Our story" title="About the band" />
+            <SectionHeading
+              eyebrow={data.story.eyebrow}
+              title={data.story.title}
+            />
             <div className="space-y-4 text-base leading-relaxed text-muted">
-              <p>
-                Our founders were retired school band teachers and local musicians who missed
-                playing together. They opened their rehearsals to anyone who wanted to learn, and
-                the band has grown by word of mouth ever since.
-              </p>
-              <p>
-                We are registered as a non-profit and every volunteer, from conductor to librarian,
-                gives their time for free.
-              </p>
+              {data.story.paragraphs.map((paragraph, i) => (
+                <p key={i}>{paragraph}</p>
+              ))}
             </div>
           </div>
 
           <ol className="relative space-y-6 border-l-2 border-brass/40 pl-8">
-            {timeline.map((item) => (
+            {data.timeline.map((item) => (
               <li key={item.year} className="relative">
-                <span className="absolute -left-[2.65rem] top-1.5 size-3.5 rounded-full bg-brass shadow-[0_0_0_4px_var(--paper-2)]" />
-                <p className="font-serif text-lg font-semibold text-ink">{item.year}</p>
-                <p className="text-sm leading-relaxed text-muted">{item.text}</p>
+                <span className="absolute -left-[2.65rem] top-1.5 size-3.5 rounded-full bg-brass shadow-[0_0_0_4px_var(--paper)]" />
+                <p className="font-serif text-lg font-semibold text-ink">
+                  {item.year}
+                </p>
+                <p className="text-sm leading-relaxed text-muted">
+                  {item.text}
+                </p>
               </li>
             ))}
           </ol>
         </div>
       </section>
 
+      {/* ──────────────────────── Values ───────────────────────────────── */}
+      <section className="band-tint bg-paper-2">
+        <div className="mx-auto w-full max-w-6xl px-5 py-20 md:py-28">
+          <SectionHeading
+            center
+            eyebrow={data.values.eyebrow}
+            title={data.values.title}
+          />
+          <div className="mt-14 grid gap-5 md:grid-cols-3">
+            {data.values.items.map((value) => {
+              const Icon = resolveIcon(value.icon);
+              return (
+                <div
+                  key={value.id}
+                  className="rounded-2xl border border-line border-t-4 border-t-plume bg-surface p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                >
+                  <span className="mb-4 grid size-12 place-items-center rounded-2xl bg-plume/10 text-plume">
+                    <Icon className="size-6" />
+                  </span>
+                  <h3 className="font-serif text-xl font-semibold tracking-tight text-ink">
+                    {value.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">
+                    {value.text}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────────────── Impact / Stats (NEW) ─────────────────────── */}
       <section className="band bg-paper">
         <div className="mx-auto w-full max-w-6xl px-5 py-20 md:py-28">
-          <SectionHeading center eyebrow="What guides us" title="What we stand for" />
-          <div className="mt-14 grid gap-5 md:grid-cols-3">
-            {values.map(({ id, title, text, Icon }) => (
-              <div
-                key={id}
-                className="rounded-2xl border border-line border-t-4 border-t-plume bg-surface p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-              >
-                <span className="mb-4 grid size-12 place-items-center rounded-2xl bg-plume/10 text-plume">
-                  <Icon className="size-6" />
-                </span>
-                <h3 className="font-serif text-xl font-semibold tracking-tight text-ink">
-                  {title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted">{text}</p>
-              </div>
+          <SectionHeading
+            center
+            eyebrow={data.impact.eyebrow}
+            title={data.impact.title}
+          />
+          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {data.impact.stats.map((stat) => {
+              const Icon = resolveIcon(stat.icon);
+              return (
+                <div
+                  key={stat.id}
+                  className="flex items-start gap-4 rounded-2xl border border-line bg-surface p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                >
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-brass/10 text-brass">
+                    <Icon className="size-6" />
+                  </span>
+                  <div>
+                    <p className="font-serif text-3xl font-bold tracking-tight text-ink">
+                      {stat.value}
+                    </p>
+                    <p className="mt-0.5 text-sm text-muted">{stat.label}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ────────────────────── FAQ (NEW) ──────────────────────────────── */}
+      <section className="band-tint bg-paper-2">
+        <div className="mx-auto w-full max-w-6xl px-5 py-20 md:py-28">
+          <SectionHeading
+            center
+            eyebrow={data.faq.eyebrow}
+            title={data.faq.title}
+          />
+          <div className="mx-auto mt-14 max-w-3xl divide-y divide-line">
+            {data.faq.items.map((item) => (
+              <FaqAccordionItem
+                key={item.id}
+                question={item.question}
+                answer={item.answer}
+              />
             ))}
           </div>
         </div>
       </section>
 
-      <section id="join" className="band-tint scroll-mt-24 bg-paper-2">
+      {/* ──────────────────── Join a Rehearsal ─────────────────────────── */}
+      <section id="join" className="band scroll-mt-24 bg-paper">
         <div className="mx-auto w-full max-w-6xl px-5 py-20 md:py-28">
           <SectionHeading
-            eyebrow="Come and see"
-            title="Join a rehearsal"
-            text="Come to any Saturday rehearsal in Pandacaqui. You can watch first, or sit in and play."
+            eyebrow={data.join.eyebrow}
+            title={data.join.title}
+            text={data.join.text}
           />
           <dl className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {joinDetails.map(({ Icon, term, detail }) => (
-              <div key={term} className="rounded-2xl border border-line bg-surface p-5 shadow-sm">
-                <dt className="flex items-center gap-2 font-bold text-ink">
-                  <Icon className="size-5 text-brass" />
-                  {term}
-                </dt>
-                <dd className="mt-1 text-sm text-muted">{detail}</dd>
-              </div>
-            ))}
+            {data.join.details.map((item) => {
+              const Icon = resolveIcon(item.icon);
+              return (
+                <div
+                  key={item.term}
+                  className="rounded-2xl border border-line bg-surface p-5 shadow-sm"
+                >
+                  <dt className="flex items-center gap-2 font-bold text-ink">
+                    <Icon className="size-5 text-brass" />
+                    {item.term}
+                  </dt>
+                  <dd className="mt-1 text-sm text-muted">{item.detail}</dd>
+                </div>
+              );
+            })}
           </dl>
           <a
             href={contact.phoneHref}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-brass-bright px-6 py-3.5 font-bold text-night-950 shadow-lg shadow-amber-500/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass-bright active:translate-y-0"
           >
-            Call {contact.phoneLabel}
+            {data.join.ctaLabel} {contact.phoneLabel}
           </a>
         </div>
       </section>
     </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* FAQ Accordion Item                                                  */
+/* ------------------------------------------------------------------ */
+
+function FaqAccordionItem({
+  question,
+  answer,
+}: {
+  question: string;
+  answer: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="py-5">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between gap-4 text-left"
+        aria-expanded={open}
+      >
+        <span className="font-serif text-lg font-semibold text-ink">
+          {question}
+        </span>
+        <span
+          className={`grid size-8 shrink-0 place-items-center rounded-full border border-line bg-surface text-muted transition-transform duration-200 ${open ? "rotate-45" : ""}`}
+          aria-hidden="true"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="1em"
+            height="1em"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+          >
+            <path d="M12 6v12M6 12h12" />
+          </svg>
+        </span>
+      </button>
+      <div
+        className={`grid transition-[grid-template-rows] duration-200 ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+      >
+        <div className="overflow-hidden">
+          <p className="pt-3 text-base leading-relaxed text-muted">{answer}</p>
+        </div>
+      </div>
+    </div>
   );
 }
 

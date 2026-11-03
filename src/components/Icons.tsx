@@ -83,6 +83,27 @@ export function IconTicket(props: IconProps) {
   );
 }
 
+export function IconKey(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="8" cy="15" r="4" />
+      <path d="M11.5 11.5 21 2" />
+      <path d="M18 5h3v3" />
+      <path d="M16 7l2 2" />
+    </Base>
+  );
+}
+
+export function IconInstrument(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M9 2v4l3 2.5L15 6V2" />
+      <path d="M12 8.5V15" />
+      <ellipse cx="12" cy="18" rx="5" ry="3" />
+    </Base>
+  );
+}
+
 export function IconCap(props: IconProps) {
   return (
     <Base {...props}>
