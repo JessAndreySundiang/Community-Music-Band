@@ -17,11 +17,7 @@ function About() {
   return (
     <>
       {/* ───────────────────────────── Hero ───────────────────────────── */}
-      <PageHero
-        eyebrow={data.hero.eyebrow}
-        title={data.hero.title}
-        text={data.hero.description}
-      >
+      <PageHero eyebrow={data.hero.eyebrow} title={data.hero.title} text={data.hero.description}>
         <div className="mt-8 flex flex-wrap gap-3">
           {data.hero.ctas.map((cta) =>
             cta.to ? (
@@ -64,11 +60,7 @@ function About() {
       {/* ─────────────────────── Mission (NEW) ────────────────────────── */}
       <section className="band-tint bg-paper-2">
         <div className="mx-auto w-full max-w-6xl px-5 py-20 md:py-28">
-          <SectionHeading
-            center
-            eyebrow={data.mission.eyebrow}
-            title={data.mission.title}
-          />
+          <SectionHeading center eyebrow={data.mission.eyebrow} title={data.mission.title} />
           <p className="mx-auto mt-6 max-w-3xl text-center text-lg leading-relaxed text-muted">
             {data.mission.statement}
           </p>
@@ -86,9 +78,7 @@ function About() {
                   <h3 className="font-serif text-xl font-semibold tracking-tight text-ink">
                     {pillar.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted">
-                    {pillar.text}
-                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">{pillar.text}</p>
                 </div>
               );
             })}
@@ -100,10 +90,7 @@ function About() {
       <section className="band bg-paper">
         <div className="mx-auto grid w-full max-w-6xl items-start gap-12 px-5 py-20 md:py-28 lg:grid-cols-[1fr_1fr]">
           <div>
-            <SectionHeading
-              eyebrow={data.story.eyebrow}
-              title={data.story.title}
-            />
+            <SectionHeading eyebrow={data.story.eyebrow} title={data.story.title} />
             <div className="space-y-4 text-base leading-relaxed text-muted">
               {data.story.paragraphs.map((paragraph, i) => (
                 <p key={i}>{paragraph}</p>
@@ -115,12 +102,8 @@ function About() {
             {data.timeline.map((item) => (
               <li key={item.year} className="relative">
                 <span className="absolute -left-[2.65rem] top-1.5 size-3.5 rounded-full bg-brass shadow-[0_0_0_4px_var(--paper)]" />
-                <p className="font-serif text-lg font-semibold text-ink">
-                  {item.year}
-                </p>
-                <p className="text-sm leading-relaxed text-muted">
-                  {item.text}
-                </p>
+                <p className="font-serif text-lg font-semibold text-ink">{item.year}</p>
+                <p className="text-sm leading-relaxed text-muted">{item.text}</p>
               </li>
             ))}
           </ol>
@@ -130,11 +113,7 @@ function About() {
       {/* ──────────────────────── Values ───────────────────────────────── */}
       <section className="band-tint bg-paper-2">
         <div className="mx-auto w-full max-w-6xl px-5 py-20 md:py-28">
-          <SectionHeading
-            center
-            eyebrow={data.values.eyebrow}
-            title={data.values.title}
-          />
+          <SectionHeading center eyebrow={data.values.eyebrow} title={data.values.title} />
           <div className="mt-14 grid gap-5 md:grid-cols-3">
             {data.values.items.map((value) => {
               const Icon = resolveIcon(value.icon);
@@ -149,9 +128,7 @@ function About() {
                   <h3 className="font-serif text-xl font-semibold tracking-tight text-ink">
                     {value.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted">
-                    {value.text}
-                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">{value.text}</p>
                 </div>
               );
             })}
@@ -162,11 +139,7 @@ function About() {
       {/* ─────────────────── Impact / Stats (NEW) ─────────────────────── */}
       <section className="band bg-paper">
         <div className="mx-auto w-full max-w-6xl px-5 py-20 md:py-28">
-          <SectionHeading
-            center
-            eyebrow={data.impact.eyebrow}
-            title={data.impact.title}
-          />
+          <SectionHeading center eyebrow={data.impact.eyebrow} title={data.impact.title} />
           <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {data.impact.stats.map((stat) => {
               const Icon = resolveIcon(stat.icon);
@@ -194,18 +167,10 @@ function About() {
       {/* ────────────────────── FAQ (NEW) ──────────────────────────────── */}
       <section className="band-tint bg-paper-2">
         <div className="mx-auto w-full max-w-6xl px-5 py-20 md:py-28">
-          <SectionHeading
-            center
-            eyebrow={data.faq.eyebrow}
-            title={data.faq.title}
-          />
+          <SectionHeading center eyebrow={data.faq.eyebrow} title={data.faq.title} />
           <div className="mx-auto mt-14 max-w-3xl divide-y divide-line">
             {data.faq.items.map((item) => (
-              <FaqAccordionItem
-                key={item.id}
-                question={item.question}
-                answer={item.answer}
-              />
+              <FaqAccordionItem key={item.id} question={item.question} answer={item.answer} />
             ))}
           </div>
         </div>
@@ -252,13 +217,7 @@ function About() {
 /* FAQ Accordion Item                                                  */
 /* ------------------------------------------------------------------ */
 
-function FaqAccordionItem({
-  question,
-  answer,
-}: {
-  question: string;
-  answer: string;
-}) {
+function FaqAccordionItem({ question, answer }: { question: string; answer: string }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -269,9 +228,7 @@ function FaqAccordionItem({
         className="flex w-full items-center justify-between gap-4 text-left"
         aria-expanded={open}
       >
-        <span className="font-serif text-lg font-semibold text-ink">
-          {question}
-        </span>
+        <span className="font-serif text-lg font-semibold text-ink">{question}</span>
         <span
           className={`grid size-8 shrink-0 place-items-center rounded-full border border-line bg-surface text-muted transition-transform duration-200 ${open ? "rotate-45" : ""}`}
           aria-hidden="true"
